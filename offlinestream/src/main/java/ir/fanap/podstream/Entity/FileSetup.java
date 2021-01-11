@@ -1,0 +1,71 @@
+package ir.fanap.podstream.Entity;
+
+
+public class FileSetup {
+
+    private final String baseUrl;
+    private final String clientId;
+    private final String videoAddress;
+    private final int quality;
+    private final boolean mobile;
+    private final boolean progressive;
+
+    public String getUrl() {
+        return baseUrl +
+                "?clientId=" + clientId +
+                "&vidoAdress=" + videoAddress +
+                "&quality=" + quality +
+                "&mobile=" + mobile +
+                "&progressive=" + progressive;
+    }
+
+    public FileSetup(Builder builder) {
+
+        this.baseUrl = builder.baseUrl;
+        this.clientId = builder.clientId;
+        this.videoAddress = builder.videoAddress;
+        this.quality = builder.quality;
+        this.mobile = builder.mobile;
+        this.progressive = builder.progressive;
+    }
+
+    public static class Builder {
+
+        String baseUrl = "http://192.168.112.32:80/register/";
+        String clientId;
+        String videoAddress;
+        int quality = 240;
+        boolean mobile = true;
+        boolean progressive = true;
+
+        public Builder deactiveProgressive() {
+            progressive = false;
+            return this;
+        }
+
+        public Builder deactiveMobile() {
+            mobile = false;
+            return this;
+        }
+
+        public Builder changeBaseUrl(String url) {
+            baseUrl = url;
+            return this;
+        }
+
+        public Builder changeQuality(int quality) {
+            this.quality = quality;
+            return this;
+        }
+
+
+        public FileSetup build(String clientId, String videoAddress) {
+            this.clientId = clientId;
+            this.videoAddress = videoAddress;
+            return new FileSetup(this);
+        }
+
+    }
+
+
+}
