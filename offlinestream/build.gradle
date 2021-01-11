@@ -1,0 +1,91 @@
+plugins {
+    id 'com.android.library'
+    id 'com.kezong.fat-aar'
+}
+
+
+ext {
+    libraryVersion = '0.0.1'
+    ndkVersion = '21.3.6528147'
+
+}
+
+
+android {
+
+    compileSdkVersion 30
+    buildToolsVersion "30.0.2"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 30
+        versionCode 1
+
+        versionName libraryVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            consumerProguardFile 'proguard-rules.pro'
+        }
+    }
+
+    configurations.embed.transitive = true
+
+
+//    configurations {
+//        //   compile.exclude module: 'versionedparcelable'
+//    }
+
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+
+    implementation(name: 'kafkaAdapter', ext: 'aar')
+            {
+                exclude group: 'androidx.customview', module: 'customview'
+                transitive = true
+            }
+    implementation('com.google.android.exoplayer:exoplayer-core:2.12.2')
+            {
+                exclude group: 'androidx.annotation', module: 'annotation'
+                transitive = true
+            }
+    implementation('com.google.android.exoplayer:exoplayer-ui:2.12.2')
+            {
+                exclude group: 'androidx.annotation', module: 'annotation'
+                exclude group: 'androidx.core', module: 'core'
+                exclude group: 'androidx.customview', module: 'customview'
+                exclude group: 'androidx.collection', module: 'collection'
+                exclude group: 'androidx.recyclerview', module: 'recyclerview'
+                exclude group: 'androidx.versionedparcelable', module: 'versionedparcelable'
+                transitive = true
+            }
+
+    //Retrofit
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
+
+    implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
+
+
+    //RxJava
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.16'
+  //  embed
+}
