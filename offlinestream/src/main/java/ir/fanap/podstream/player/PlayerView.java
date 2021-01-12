@@ -1,15 +1,11 @@
 package ir.fanap.podstream.player;
 
 import android.content.Context;
-import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
-import android.view.Surface;
-import android.view.SurfaceControl;
-import android.view.SurfaceView;
 import android.view.TextureView;
 
-import io.reactivex.annotations.NonNull;
-import io.reactivex.annotations.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 
 public class PlayerView extends TextureView {
