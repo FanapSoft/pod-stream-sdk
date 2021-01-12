@@ -2,6 +2,8 @@ package ir.fanap.podstreamsdkexample;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,6 +15,7 @@ public class MainActivity extends AppCompatActivity implements MainConstract.Vie
 
     //    TextView ext_error;
     MainConstract.Presenter presenter;
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,13 +25,14 @@ public class MainActivity extends AppCompatActivity implements MainConstract.Vie
     }
 
     public void init() {
-        //ext_error = findViewById(R.id.ext_error);
+        progressBar = findViewById(R.id.progressBar);
         presenter = new MainPresenter(this, this);
         FileSetup file = new FileSetup.Builder().
                 build(
                         "7936886af8064418b01e97f57c377734",
-                        "5313E3G5GK3HCP1I"
+                        "A4LGHTOURUCII46D"
                 );
+        //A4LGHTOURUCII46D
         presenter.prepare(file);
     }
 
@@ -37,8 +41,26 @@ public class MainActivity extends AppCompatActivity implements MainConstract.Vie
 
     }
 
+    void showLoading() {
+        if (progressBar.getVisibility() != View.VISIBLE)
+            progressBar.setVisibility(View.VISIBLE);
+        Log.e("loadti", "showLoading: " + System.currentTimeMillis());
+
+    }
+
+    void hideLoading() {
+        if (progressBar.getVisibility() == View.VISIBLE)
+            progressBar.setVisibility(View.INVISIBLE);
+        Log.e("loadti", "hideLoading: " + System.currentTimeMillis());
+    }
+
     @Override
     public void isLoading(boolean isloading) {
+        if (isloading) {
+            showLoading();
+        } else {
+            hideLoading();
+        }
 
     }
 

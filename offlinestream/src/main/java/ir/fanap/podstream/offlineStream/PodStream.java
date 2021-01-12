@@ -39,7 +39,7 @@ public class PodStream {
     private static StreamEventListener listener;
     private boolean isReady = false;
     private static boolean showLog = true;
-    private static String TAG = "PodStream";
+    public static String TAG = "PodStream";
 
     private static StyledPlayerView playerView;
     private static SimpleExoPlayer player;
