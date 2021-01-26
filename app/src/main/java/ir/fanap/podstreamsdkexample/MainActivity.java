@@ -30,9 +30,10 @@ public class MainActivity extends AppCompatActivity implements MainConstract.Vie
         FileSetup file = new FileSetup.Builder().
                 build(
                         "7936886af8064418b01e97f57c377734",
-                        "A4LGHTOURUCII46D"
+                        "2MUMAFQQ6MKQFK84"
                 );
         //A4LGHTOURUCII46D
+        //2MUMAFQQ6MKQFK84
         presenter.prepare(file);
     }
 
