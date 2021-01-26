@@ -109,6 +109,7 @@ public class PodStream {
             public void onPlayerError(ExoPlaybackException error) {
                 //Catch here, but app still crash on some errors!
                 ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.type);
+                ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.getMessage());
             }
         });
     }

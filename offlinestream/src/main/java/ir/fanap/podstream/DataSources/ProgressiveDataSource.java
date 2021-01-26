@@ -16,10 +16,12 @@ package ir.fanap.podstream.DataSources;
  * limitations under the License.
  */
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.kafkassl.kafkaclient.ConsumerClient;
@@ -37,6 +39,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 
+import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.network.response.DashResponse;
 
 import static ir.fanap.podstream.offlineStream.PodStream.TAG;
@@ -51,7 +54,7 @@ import static ir.fanap.podstream.offlineStream.PodStream.TAG;
 /**
  * A {@link DataSource} for reading local files.
  */
-public final class ProgressiveDataSource extends BaseDataSource {
+public final class ProgressiveDataSource extends BaseDataSource implements KafkaDataProvider.KafkaProviderCallBack {
 
     /**
      * Creates base data source.
@@ -72,6 +75,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
         private TransferListener listener;
         DashResponse dashFile;
         private ProgressiveDataSource dataSource;
+        KafkaDataProvider provider;
 
         public Factory(DashResponse response) {
             dashFile = response;
@@ -92,10 +96,8 @@ public final class ProgressiveDataSource extends BaseDataSource {
 
         @Override
         public ProgressiveDataSource createDataSource() {
-
-            byte[] videoBuffer = new byte[0];//=new byte[50000];
-//            MasoudDataSource dataSource = new MasoudDataSource(6000196, "192.168.112.32:9092", "CONTROL5313E3G5GK3HCP1I3481691607763212908", "STREAM5313E3G5GK3HCP1I3481691607763212908");
-            dataSource = new ProgressiveDataSource(dashFile.getSize(), dashFile.getBrokerAddress(), dashFile.getProduceTopic(), dashFile.getConsumTopic());
+            provider = new KafkaDataProvider(dashFile);
+            dataSource = new ProgressiveDataSource(dashFile, provider);
             if (listener != null) {
                 dataSource.addTransferListener(listener);
             }
@@ -109,33 +111,16 @@ public final class ProgressiveDataSource extends BaseDataSource {
     private Uri uri;
     private long bytesRemaining;
     private boolean opened;
-    private byte[] dataBuffer;
-    private long startBuffer;
-    private long endBuffer;
     private long filmLength;
-    ConsumerClient consumerClient;
-    ProducerClient producerClient;
-    String consumTopic;
-    String produceTopic;
     private long readPosition;
+    KafkaDataProvider provider;
 
-    public ProgressiveDataSource(long filmLength, String brokerAddres, String produceTopic, String consumTopic) {
+    public ProgressiveDataSource(@NonNull DashResponse dashResponse, @NonNull KafkaDataProvider provider) {
         super(/* isNetwork= */ false);
-        this.consumTopic = consumTopic;
-        this.produceTopic = produceTopic;
-        final Properties propertiesProducer = new Properties();
-        propertiesProducer.setProperty("bootstrap.servers", brokerAddres);
-        producerClient = new ProducerClient(propertiesProducer);
-        producerClient.connect();
-        propertiesProducer.setProperty("group.id", "777");
-        propertiesProducer.setProperty("auto.offset.reset", "beginning");
-        consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
-        consumerClient.connect();
-        consumerClient.consumingTopic(5);
-        this.filmLength = filmLength;
-
-        updateBuffer(0, DefualtLengthValue);
-
+        this.provider = provider;
+        this.provider.setListener(this);
+        this.filmLength = dashResponse.getSize();
+        this.provider.updateBuffer(0, Constants.DefualtLengthValue);
 
     }
 
@@ -165,12 +150,25 @@ public final class ProgressiveDataSource extends BaseDataSource {
         readLength = (int) Math.min(readLength, bytesRemaining);
 
         try {
-            if (shouldUpdateBuffer(readPosition, readLength)) {
-                long readLengthBuffer = Math.max(readLength, DefualtLengthValue);
-
-                updateBuffer(readPosition, readLengthBuffer);
+            if (provider.shouldUpdateBuffer(readPosition, readLength)) {
+                long readLengthBuffer = Math.max(readLength, Constants.DefualtLengthValue);
+                provider.updateBuffer(readPosition, readLengthBuffer);
             }
-            System.arraycopy(dataBuffer, (int) (readPosition - startBuffer), buffer, offset, readLength);
+
+            if (provider.isExistInStartBuffer(offset, readLength,readPosition)) {
+                System.arraycopy(provider.getStartBuffer(), offset, buffer, offset, readLength);
+              //  System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+                Log.e("Buffering", "exist in start:" );
+            } else if (provider.isExistInEndBuffer(offset, readLength)) {
+                System.arraycopy(provider.getEndBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+                Log.e("Buffering", "exist in end:" );
+            } else {
+
+                System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+                Log.e("Buffering", "exist in main:" );
+            }
+
+            System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
 
         } catch (Exception e) {
             int a = 10;
@@ -180,6 +178,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
         bytesRemaining -= readLength;
         return readLength;
     }
+
 
     @Override
     @Nullable
@@ -226,72 +225,9 @@ public final class ProgressiveDataSource extends BaseDataSource {
         }
     }
 
-
-    public static int DefualtLengthValue = 250000;
-
-    public void updateBuffer(long offset, long length) {
-        if (length > DefualtLengthValue) {
-            getData(offset, length);
-        } else {
-            if ((offset + length) > filmLength)
-                length = filmLength - offset;
-            startBuffer = offset;
-            endBuffer = offset + (length - 1);
-            ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-            buffers.putLong(-3);
-            producerClient.produceMessege(buffers.array(), offset + "," + length, produceTopic);
-            dataBuffer = consumerClient.consumingTopic(5);
-            while (dataBuffer == null || dataBuffer.length < length) {
-                dataBuffer = consumerClient.consumingTopic(5);
-
-            }
-        }
-    }
-
-    public void getData(long offset, long length) {
-
-        dataBuffer = new byte[(int) length];
-        startBuffer = offset;
-        endBuffer = offset + (length - 1);
-        boolean exit = false;
-        for (int i = 0; i < length; i += DefualtLengthValue) {
-            int newlength = DefualtLengthValue;
-            if (i + newlength > length) {
-                newlength = (int) length - i;
-                exit = true;
-            }
-
-            byte[] newData;
-            ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-            buffers.putLong(-3);
-
-            producerClient.produceMessege(buffers.array(), (i + offset) + "," + newlength, produceTopic);
-            newData = consumerClient.consumingTopic(5);
-
-            while (newData == null || newData.length < newlength) {
-                newData = consumerClient.consumingTopic(5);
-
-            }
-            System.arraycopy(newData, 0, dataBuffer, i, newlength);
-            System.out.println("offset :" + i + " length : " + newlength);
-            if (exit)
-                break;
-
-        }
-
-    }
-
     public void release() {
-        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-        buffers.putLong(-2);
-        producerClient.produceMessege(buffers.array(), ",", produceTopic);
-
+        provider.release();
     }
 
-    public boolean shouldUpdateBuffer(long offset, long length) {
-        if (offset < endBuffer && offset >= startBuffer && (offset + length) <= endBuffer)
-            return false;
-        return true;
-    }
 
 }
