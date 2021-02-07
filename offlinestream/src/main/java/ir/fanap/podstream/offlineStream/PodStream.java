@@ -6,8 +6,11 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
@@ -17,12 +20,14 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
+import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import ir.fanap.podstream.DataSources.FileDataSource;
 import ir.fanap.podstream.DataSources.ProgressiveDataSource;
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.R;
@@ -44,6 +49,7 @@ public class PodStream {
     private static StyledPlayerView playerView;
     private static SimpleExoPlayer player;
     private ProgressiveDataSource.Factory dataSourceFactory;
+//    private FileDataSource.Factory dataSourceFactory;
     private MediaSource mediaSource;
     private static AppApi api;
 
@@ -66,7 +72,16 @@ public class PodStream {
     }
 
     private static void initPlayer(Activity activity) {
-        player = new SimpleExoPlayer.Builder(activity).build();
+        DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
+//        builder.setAllocator(new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE));
+//        builder.setBufferDurationsMs(
+//                1000,
+//                30000,
+//                500,
+//                0
+//        );
+        builder.setBackBuffer(10000,true);
+        player = new SimpleExoPlayer.Builder(activity).setLoadControl(builder.build()).build();
         playerView = activity.findViewById(R.id.player_view);
         playerView.setPlayer(player);
         player.setPlayWhenReady(true);
@@ -145,6 +160,11 @@ public class PodStream {
 
     }
 
+    private FileDataSource.Factory buildDataSourceFactory() {
+        return new FileDataSource.Factory();
+    }
+
+
     private ProgressiveDataSource.Factory buildDataSourceFactory(DashResponse response) {
         return new ProgressiveDataSource.Factory(response);
     }
@@ -172,6 +192,7 @@ public class PodStream {
     public void attachPlayer(DashResponse response) {
 
         dataSourceFactory = buildDataSourceFactory(response);
+//        dataSourceFactory = buildDataSourceFactory();
         mediaSource = buildMediaSource();
         if (player != null) {
             player.prepare(mediaSource, false, true);
