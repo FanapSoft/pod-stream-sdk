@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 
 import ir.fanap.podstream.Entity.FileSetup;
+import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.offlineStream.PodStream;
 import ir.fanap.podstream.offlineStream.StreamEventListener;
 
@@ -28,6 +29,7 @@ public class MainPresenter implements MainConstract.Presenter, StreamEventListen
     @Override
     public void prepare(FileSetup file) {
         offlinestreamer.prepareStreaming(file);
+//        offlinestreamer.attachPlayer(null);
     }
 
 

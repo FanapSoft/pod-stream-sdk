@@ -1,10 +1,18 @@
 package ir.fanap.podstream.DataSources;
 
+import android.net.Uri;
+import android.os.Environment;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.example.kafkassl.kafkaclient.ConsumerClient;
 import com.example.kafkassl.kafkaclient.ProducerClient;
+import com.google.android.exoplayer2.upstream.FileDataSource;
+import com.google.android.exoplayer2.util.Assertions;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 
@@ -17,6 +25,7 @@ public class KafkaDataProvider {
     }
 
     public KafkaDataProvider(DashResponse dashFile) {
+        isEndBufferFill = false;
         this.consumTopic = dashFile.getConsumTopic();
         this.produceTopic = dashFile.getProduceTopic();
         this.filmLength = dashFile.getSize();
@@ -30,8 +39,8 @@ public class KafkaDataProvider {
         consumerClient.connect();
         consumerClient.consumingTopic(5);
         getStartOfFile();
-        getEndOfFile();
-       // updateBuffer(0, Constants.DefualtLengthValue);
+     //   getEndOfFile();
+
     }
 
     KafkaProviderCallBack listener;
@@ -48,25 +57,34 @@ public class KafkaDataProvider {
     private long endOfMainBuffer;
     private long filmLength;
 
+    private boolean isEndBufferFill = false;
     public void setListener(KafkaProviderCallBack listener) {
         this.listener = listener;
     }
 
     public void getStartOfFile() {
-        Thread taskforstart = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-                buffers.putLong(-3);
-                producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
-                startBuffer = consumerClient.consumingTopic(5);
-                while (startBuffer == null || startBuffer.length < 250000) {
-                    startBuffer = consumerClient.consumingTopic(5);
-                }
-                Log.e("Buffering", "start is done" + startBuffer.length);
-            }
-        });
-        taskforstart.start();
+        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
+        buffers.putLong(-3);
+        producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
+        startBuffer = consumerClient.consumingTopic(5);
+        while (startBuffer == null || startBuffer.length < 250000) {
+            startBuffer = consumerClient.consumingTopic(5);
+        }
+        Log.e("buffering", "start is done" + startBuffer.length);
+//        Thread taskforstart = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
+//                buffers.putLong(-3);
+//                producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
+//                startBuffer = consumerClient.consumingTopic(5);
+//                while (startBuffer == null || startBuffer.length < 250000) {
+//                    startBuffer = consumerClient.consumingTopic(5);
+//                }
+//                Log.e("buffering", "start is done" + startBuffer.length);
+//            }
+//        });
+//        taskforstart.start();
     }
 
     public void getEndOfFile() {
@@ -81,6 +99,7 @@ public class KafkaDataProvider {
                     endBuffer = consumerClient.consumingTopic(5);
                 }
                 Log.e("Buffering", "end is done" + endBuffer.length);
+                isEndBufferFill = true;
             }
         });
         taskforend.start();
@@ -102,22 +121,47 @@ public class KafkaDataProvider {
         return endBuffer;
     }
 
+    private void getEndBufferStartOffset(int offset, int length) {
+        endBufferStartIndex = (int) this.filmLength - (offset + length);
+        endBufferEndIndex = endBuffer.length - endBufferStartIndex;
+        endBufferStartIndex = endBufferEndIndex - length;
+
+    }
+
+    int endBufferStartIndex = 0;
+    int endBufferEndIndex = 0;
+
+    public int getEndBufferStartOffset() {
+        Log.e("testtete", "getEndBufferStartOffset: ");
+        return endBufferStartIndex;
+    }
+
     public boolean isExistInEndBuffer(long offset, long Length) {
         if (startBuffer == null)
             return false;
-
+        if (offset > this.filmLength - 250000 && isEndBufferFill) {
+            getEndBufferStartOffset((int) offset, (int) Length);
+            return true;
+        }
         return false;
     }
 
-    public boolean isExistInStartBuffer(long offset, long length,long readPosition) {
-        if (endBuffer == null || readPosition >250000)
+    public boolean shouldUpdateBuffer(long offset, long length) {
+        if (offset < endOfMainBuffer && offset >= offsetMainBuffer && (offset + length) <= endOfMainBuffer)
             return false;
 
-        return offset > 0 && offset <= 250000 && (offset + length) <= 250000;
+        return true;
+    }
+//100
+    //50
+    //250000
+    public boolean isExistInStartBuffer(long offset, long length) {
+        if ( offset >= 0 && offset < 250000 && (offset + length) <= 250000)
+            return true;
+        return false;
     }
 
     public void updateBuffer(long offset, long length) {
-
         if (length > Constants.DefualtLengthValue) {
             getData(offset, length);
         } else {
@@ -167,11 +211,6 @@ public class KafkaDataProvider {
     }
 
 
-    public boolean shouldUpdateBuffer(long offset, long length) {
-        if (offset < endOfMainBuffer && offset >= offsetMainBuffer && (offset + length) <= endOfMainBuffer)
-            return false;
-        return true;
-    }
 
     public void release() {
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
@@ -179,4 +218,21 @@ public class KafkaDataProvider {
         producerClient.produceMessege(buffers.array(), ",", produceTopic);
     }
 
+
+    private static RandomAccessFile openLocalFile(Uri uri) throws com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException {
+        try {
+            return new RandomAccessFile(Assertions.checkNotNull(uri.getPath()), "r");
+        } catch (FileNotFoundException e) {
+            if (!TextUtils.isEmpty(uri.getQuery()) || !TextUtils.isEmpty(uri.getFragment())) {
+                throw new com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException(
+                        String.format(
+                                "uri has query and/or fragment, which are not supported. Did you call Uri.parse()"
+                                        + " on a string containing '?' or '#'? Use Uri.fromFile(new File(path)) to"
+                                        + " avoid this. path=%s,query=%s,fragment=%s",
+                                uri.getPath(), uri.getQuery(), uri.getFragment()),
+                        e);
+            }
+            throw new com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException(e);
+        }
+    }
 }
