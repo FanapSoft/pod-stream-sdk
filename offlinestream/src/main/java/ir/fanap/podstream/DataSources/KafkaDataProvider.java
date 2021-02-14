@@ -38,7 +38,7 @@ public class KafkaDataProvider {
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
         consumerClient.consumingTopic(5);
-        getStartOfFile();
+      getStartOfFile();
      //   getEndOfFile();
 
     }
@@ -63,14 +63,15 @@ public class KafkaDataProvider {
     }
 
     public void getStartOfFile() {
-        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-        buffers.putLong(-3);
-        producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
+        Log.e("bufferring", "showLoading: " + System.currentTimeMillis());
+//        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
+//        buffers.putLong(-3);
+//        producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
         startBuffer = consumerClient.consumingTopic(5);
         while (startBuffer == null || startBuffer.length < 250000) {
             startBuffer = consumerClient.consumingTopic(5);
         }
-        Log.e("buffering", "start is done" + startBuffer.length);
+        Log.e("bufferring", "showLoading: " + System.currentTimeMillis());
 //        Thread taskforstart = new Thread(new Runnable() {
 //            @Override
 //            public void run() {
@@ -152,9 +153,7 @@ public class KafkaDataProvider {
 
         return true;
     }
-//100
-    //50
-    //250000
+
     public boolean isExistInStartBuffer(long offset, long length) {
         if ( offset >= 0 && offset < 250000 && (offset + length) <= 250000)
             return true;

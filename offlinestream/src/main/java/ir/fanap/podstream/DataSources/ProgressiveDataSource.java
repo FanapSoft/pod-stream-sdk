@@ -147,17 +147,17 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
 
         try {
 
-            if (provider.isExistInStartBuffer(readPosition, readLength)) {
-                Log.e("buffering", "read: start");
-                System.arraycopy(provider.getStartBuffer(), (int) readPosition, buffer, offset, readLength);
-            } else {
+//            if (provider.isExistInStartBuffer(readPosition, readLength)) {
+//                Log.e("buffering", "read: start");
+//                System.arraycopy(provider.getStartBuffer(), (int) readPosition, buffer, offset, readLength);
+//            } else {
                 if (provider.shouldUpdateBuffer(readPosition, readLength)) {
                     long readLengthBuffer = Math.max(readLength, Constants.DefualtLengthValue);
                     provider.updateBuffer(readPosition, readLengthBuffer);
                 }
 
                 System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
-            }
+//            }
 
         } catch (Exception e) {
             int a = 10;
