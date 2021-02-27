@@ -13,7 +13,9 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.PodStreamSdkExample"
         tools:targetApi="n">
-        <activity android:name="ir.fanap.podstreamsdkexample.MainActivity">
+
+
+        <activity android:name="ir.fanap.podstreamsdkexample.ui.player_activity.PlayerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

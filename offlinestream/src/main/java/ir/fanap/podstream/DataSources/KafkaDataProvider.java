@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.Properties;
 
 import ir.fanap.podstream.Util.Constants;
@@ -33,12 +34,16 @@ public class KafkaDataProvider {
         propertiesProducer.setProperty("bootstrap.servers", dashFile.getBrokerAddress());
         producerClient = new ProducerClient(propertiesProducer);
         producerClient.connect();
-        propertiesProducer.setProperty("group.id", "777");
+        propertiesProducer.setProperty("group.id", "264");
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
-        consumerClient.consumingTopic(5);
-      getStartOfFile();
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        getStartOfFile();
      //   getEndOfFile();
 
     }
@@ -62,16 +67,17 @@ public class KafkaDataProvider {
         this.listener = listener;
     }
 
+
     public void getStartOfFile() {
-        Log.e("bufferring", "showLoading: " + System.currentTimeMillis());
+        Date start =new Date();
 //        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
 //        buffers.putLong(-3);
 //        producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
-        startBuffer = consumerClient.consumingTopic(5);
+//        startBuffer = consumerClient.consumingTopic(5000);
         while (startBuffer == null || startBuffer.length < 250000) {
-            startBuffer = consumerClient.consumingTopic(5);
+            startBuffer = consumerClient.consumingTopic(1000);
         }
-        Log.e("bufferring", "showLoading: " + System.currentTimeMillis());
+        Log.e("testbuffer", "give start buffer: " + (new Date().getTime()-start.getTime()));
 //        Thread taskforstart = new Thread(new Runnable() {
 //            @Override
 //            public void run() {
@@ -95,7 +101,7 @@ public class KafkaDataProvider {
                 ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
                 buffers.putLong(-3);
                 producerClient.produceMessege(buffers.array(), filmLength - 250000 + "," + filmLength, produceTopic);
-                endBuffer = consumerClient.consumingTopic(5);
+                endBuffer = consumerClient.consumingTopic(1000);
                 while (endBuffer == null || endBuffer.length < 250000) {
                     endBuffer = consumerClient.consumingTopic(5);
                 }
