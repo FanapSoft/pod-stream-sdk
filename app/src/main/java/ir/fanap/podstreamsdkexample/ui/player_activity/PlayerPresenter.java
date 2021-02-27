@@ -1,19 +1,21 @@
-package ir.fanap.podstreamsdkexample;
+package ir.fanap.podstreamsdkexample.ui.player_activity;
 
 import android.app.Activity;
 import android.content.Context;
 
 import ir.fanap.podstream.Entity.FileSetup;
-import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.offlineStream.PodStream;
 import ir.fanap.podstream.offlineStream.StreamEventListener;
+import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
-public class MainPresenter implements MainConstract.Presenter, StreamEventListener {
+public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventListener {
     PodStream offlinestreamer;
-    MainConstract.View mView;
+    PlayerConstract.View mView;
     Context mContext;
+    Repository repository;
 
-    public MainPresenter(Activity context, MainConstract.View view) {
+    public PlayerPresenter(Activity context, PlayerConstract.View view) {
+        repository = Repository.getInstance();
         mContext = context;
         mView = view;
         offlinestreamer = PodStream.init(context);
@@ -23,21 +25,17 @@ public class MainPresenter implements MainConstract.Presenter, StreamEventListen
     @Override
     public void init() {
         offlinestreamer.setListener(this);
-        mView.isLoading(true);
     }
 
     @Override
     public void prepare(FileSetup file) {
         offlinestreamer.prepareStreaming(file);
-//        offlinestreamer.attachPlayer(null);
     }
-
 
     @Override
     public void onFileReady() {
         mView.onFileReady();
     }
-
 
     @Override
     public void onIsLoadingChanged(boolean isLoading) {
@@ -52,6 +50,11 @@ public class MainPresenter implements MainConstract.Presenter, StreamEventListen
     @Override
     public void destroy() {
         offlinestreamer.releasePlayer();
+    }
+
+    @Override
+    public void getVideoList() {
+        mView.onRecivedVideoList(repository.getVideo());
     }
 
 }

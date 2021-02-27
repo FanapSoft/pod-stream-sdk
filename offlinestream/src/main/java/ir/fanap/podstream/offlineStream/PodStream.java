@@ -2,15 +2,12 @@ package ir.fanap.podstream.offlineStream;
 
 
 import android.app.Activity;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
@@ -20,10 +17,12 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
-import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import java.util.Date;
+import java.util.HashMap;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -49,13 +48,17 @@ public class PodStream {
     private static StyledPlayerView playerView;
     private static SimpleExoPlayer player;
     private ProgressiveDataSource.Factory dataSourceFactory;
-//    private FileDataSource.Factory dataSourceFactory;
+    //    private FileDataSource.Factory dataSourceFactory;
     private MediaSource mediaSource;
     private static AppApi api;
+
+    private static HashMap<String, DashResponse> cachManifestUrls;
+
 
     private PodStream() {
 
     }
+
 
     public synchronized static PodStream init(Activity activity) {
 
@@ -66,6 +69,8 @@ public class PodStream {
             mCompositeDisposable = new CompositeDisposable();
             gson = new GsonBuilder().setPrettyPrinting().create();
             initPlayer(activity);
+            cachManifestUrls = new HashMap<>();
+
         }
         return instance;
 
@@ -137,19 +142,47 @@ public class PodStream {
         this.listener = listener;
     }
 
+    Date start;
     public void prepareStreaming(FileSetup file) {
+        start = new Date();
+        if (!checkInCacheExist(file))
+            mCompositeDisposable.add(api.getDashManifest(file.getUrl())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .subscribe(response -> {
+                                fileReadyToPlay(response);
+                                addFileToCache(file, response);
+                            },
+                            throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
 
-        mCompositeDisposable.add(api.getDashManifest(file.getUrl())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(
-                        this::fileReadyToPlay,
-                        throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
+    }
 
+    private void addFileToCache(FileSetup file, DashResponse response) {
+        if (!cachManifestUrls.containsKey(file.getUrl())) {
+            Log.e(TAG, "add file to cache ");
+            cachManifestUrls.put(file.getUrl(), response);
+        }
+    }
+
+    private boolean checkInCacheExist(FileSetup file) {
+        if (cachManifestUrls.containsKey(file.getUrl())) {
+            Log.e(TAG, "get file from cache ");
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    attachPlayer(cachManifestUrls.get(file.getUrl()));
+
+                }
+            }).start();
+            return true;
+        }
+
+        return false;
     }
 
     public void fileReadyToPlay(DashResponse response) {
 
+        Log.e("testbuffer", "give response: " + (new Date().getTime() - start.getTime()));
         isReady = true;
         mContext.runOnUiThread(new Runnable() {
             @Override
@@ -195,6 +228,11 @@ public class PodStream {
 //        dataSourceFactory = buildDataSourceFactory();
         mediaSource = buildMediaSource();
         if (player != null) {
+//            if (player.isPlaying()||player.isLoading()) {
+//                Log.e(TAG, "release player: " );
+//                player.release();
+//            }
+
             player.prepare(mediaSource, false, true);
         }
 
