@@ -9,6 +9,17 @@ public class FileSetup {
     private final int quality;
     private final boolean mobile;
     private final boolean progressive;
+    private  String streamTopic;
+    private  String controlTopic;
+
+    public void setStreamTopic(String streamTopic) {
+        this.streamTopic = streamTopic;
+
+    }
+
+    public void setControlTopic(String controlTopic) {
+        this.controlTopic = controlTopic;
+    }
 
     public String getUrl() {
         return baseUrl +
@@ -16,7 +27,9 @@ public class FileSetup {
                 "&vidoAdress=" + videoAddress +
                 "&quality=" + quality +
                 "&mobile=" + mobile +
-                "&progressive=" + progressive;
+                "&progressive=" + progressive+
+                "&streamTopic=" + streamTopic+
+                "&controlTopic=" + controlTopic;
     }
 
     public FileSetup(Builder builder) {

@@ -24,6 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:text="TextView"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toTopOf="@+id/txt_quality"
         app:layout_constraintEnd_toStartOf="@+id/imageView"
         app:layout_constraintTop_toTopOf="parent" />
@@ -32,6 +33,7 @@
         android:id="@+id/txt_hashcode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
         android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/txt_name"
@@ -41,6 +43,7 @@
         android:id="@+id/txt_quality"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
         android:text="TextView"
         app:layout_constraintBottom_toTopOf="@+id/txt_hashcode"
         app:layout_constraintEnd_toEndOf="@+id/txt_hashcode"

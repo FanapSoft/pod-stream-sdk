@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
 
+import com.example.kafkassl.kafkaclient.ConsumerClient;
+import com.example.kafkassl.kafkaclient.ProducerClient;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -23,10 +25,12 @@ import com.google.gson.GsonBuilder;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Properties;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.DataSources.FileDataSource;
+import ir.fanap.podstream.DataSources.KafkaDataProvider;
 import ir.fanap.podstream.DataSources.ProgressiveDataSource;
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.R;
@@ -34,31 +38,33 @@ import ir.fanap.podstream.Util.LogTypes;
 import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
 import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstream.network.response.TopicResponse;
 
 public class PodStream {
+    public static String TAG = "PodStream";
     private static CompositeDisposable mCompositeDisposable;
     private static PodStream instance;
     private static Activity mContext;
     private static Gson gson;
     private static StreamEventListener listener;
-    private boolean isReady = false;
     private static boolean showLog = true;
-    public static String TAG = "PodStream";
-
     private static StyledPlayerView playerView;
     private static SimpleExoPlayer player;
+    private static AppApi api;
+    private static HashMap<String, DashResponse> cachManifestUrls;
+    private static ConsumerClient consumerClient;
+    private static ProducerClient producerClient;
+    private static String consumTopic;
+    private static String produceTopic;
+    Date start;
+    private boolean isReady = false;
     private ProgressiveDataSource.Factory dataSourceFactory;
     //    private FileDataSource.Factory dataSourceFactory;
     private MediaSource mediaSource;
-    private static AppApi api;
-
-    private static HashMap<String, DashResponse> cachManifestUrls;
-
-
+    private static KafkaDataProvider provider;
     private PodStream() {
 
     }
-
 
     public synchronized static PodStream init(Activity activity) {
 
@@ -70,7 +76,7 @@ public class PodStream {
             gson = new GsonBuilder().setPrettyPrinting().create();
             initPlayer(activity);
             cachManifestUrls = new HashMap<>();
-
+            prepareTopic();
         }
         return instance;
 
@@ -85,7 +91,7 @@ public class PodStream {
 //                500,
 //                0
 //        );
-        builder.setBackBuffer(10000,true);
+        builder.setBackBuffer(10000, true);
         player = new SimpleExoPlayer.Builder(activity).setLoadControl(builder.build()).build();
         playerView = activity.findViewById(R.id.player_view);
         playerView.setPlayer(player);
@@ -138,20 +144,59 @@ public class PodStream {
         api = RetrofitClient.getInstance().create(AppApi.class);
     }
 
+    private static void prepareTopic() {
+        mCompositeDisposable.add(api.getTopics("http://192.168.112.32/getTopic/?clientId=7936886af8064418b01e97f57c377734")
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(response -> {
+                            connectKafkaProvider(response);
+                            Log.e(TAG, "prepareTopic: ");
+                        },
+                        throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
+
+    }
+
+    private static TopicResponse config;
+
+    private static void connectKafkaProvider(TopicResponse kafkaConfigs) {
+        config = kafkaConfigs;
+        provider = new KafkaDataProvider(kafkaConfigs);
+//        consumTopic = kafkaConfigs.getStreamTopic();
+//        produceTopic = kafkaConfigs.getControlTopic();
+//        final Properties propertiesProducer = new Properties();
+//        propertiesProducer.setProperty("bootstrap.servers", kafkaConfigs.getBrokerAddress());
+//        producerClient = new ProducerClient(propertiesProducer);
+//        producerClient.connect();
+//        propertiesProducer.setProperty("group.id", "264");
+//        propertiesProducer.setProperty("auto.offset.reset", "beginning");
+//        consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
+//        Date start = new Date();
+//        consumerClient.connect();
+//        Log.e("testbuffer", "give response: " + (new Date().getTime() - start.getTime()));
+
+    }
+
+    private static void ShowLog(String logType, String message) {
+        if (showLog)
+            Log.e(TAG, logType + ": " + message);
+        listener.hasError(message);
+    }
+
     public void setListener(StreamEventListener listener) {
         this.listener = listener;
     }
 
-    Date start;
     public void prepareStreaming(FileSetup file) {
+        file.setControlTopic(config.getControlTopic());
+        file.setStreamTopic(config.getStreamTopic());
         start = new Date();
-        if (!checkInCacheExist(file))
+//        if (!checkInCacheExist(file))
             mCompositeDisposable.add(api.getDashManifest(file.getUrl())
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .subscribe(response -> {
                                 fileReadyToPlay(response);
-                                addFileToCache(file, response);
+                               // addFileToCache(file, response);
                             },
                             throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
 
@@ -197,9 +242,8 @@ public class PodStream {
         return new FileDataSource.Factory();
     }
 
-
     private ProgressiveDataSource.Factory buildDataSourceFactory(DashResponse response) {
-        return new ProgressiveDataSource.Factory(response);
+        return new ProgressiveDataSource.Factory(response,provider);
     }
 
     private MediaSource buildMediaSource() {
@@ -216,14 +260,12 @@ public class PodStream {
         showLog = false;
     }
 
-
     public void stopStreaming() {
 
     }
 
-
     public void attachPlayer(DashResponse response) {
-
+        this.provider.startStreming(response);
         dataSourceFactory = buildDataSourceFactory(response);
 //        dataSourceFactory = buildDataSourceFactory();
         mediaSource = buildMediaSource();
@@ -239,18 +281,11 @@ public class PodStream {
 
     }
 
-
     public void releasePlayer() {
         if (dataSourceFactory != null) {
             isReady = false;
             mCompositeDisposable.dispose();
-            dataSourceFactory.getDataSource().release();
+            provider.release();
         }
-    }
-
-    private static void ShowLog(String logType, String message) {
-        if (showLog)
-            Log.e(TAG, logType + ": " + message);
-        listener.hasError(message);
     }
 }
