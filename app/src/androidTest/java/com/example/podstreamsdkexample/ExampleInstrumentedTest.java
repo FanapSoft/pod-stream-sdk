@@ -1,17 +1,16 @@
 package com.example.podstreamsdkexample;
 
 import android.content.Context;
-import android.util.Log;
 
-import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -84,5 +83,53 @@ public class ExampleInstrumentedTest {
         System.out.println(Arrays.toString(temp));
 
     }
+
+
+    @Test
+    public void splitParts() {
+        int[] kafkalist = getArray(1000);
+        int bufferlengh = 50;
+        int[] start = new int[bufferlengh];
+        int[] end = new int[bufferlengh];
+        int[] midle = new int[kafkalist.length - (bufferlengh * 2)];
+
+        System.arraycopy(kafkalist, 0, start, 0, bufferlengh);
+        System.arraycopy(kafkalist, kafkalist.length - bufferlengh, end, 0, bufferlengh);
+        System.arraycopy(kafkalist, start.length, midle, 0, midle.length);
+        findofssets(kafkalist, end, 960, 20);
+//        System.arraycopy(end, starto, temp, 0, length);
+//        //25-26-27
+//        System.out.println(Arrays.toString(start));
+//        System.out.println(Arrays.toString(end));
+    }
+//startleng=1000
+    //templegth= 50
+    //offset = 960
+    //count = 20
+
+    @Test
+    public void test() {
+       // findofssets(1000, 50, 960, 20);
+    }
+
+    void findofssets(int[] length1, int[] templength1, int offset, int count) {
+        int[] temp = new int[count];
+        int starto;
+        int endo;
+        starto = length1.length - (offset + count);
+        endo = templength1.length - starto;
+        starto = endo - count;
+        System.arraycopy(templength1, starto, temp, 0, count);
+        System.out.println(starto + " <====start   end====> " + endo);
+    }
+
+    int[] getArray(int length) {
+        int[] list = new int[length];
+        for (int i = 0; i < length; ++i) {
+            list[i] = i;
+        }
+        return list;
+    }
+
 
 }

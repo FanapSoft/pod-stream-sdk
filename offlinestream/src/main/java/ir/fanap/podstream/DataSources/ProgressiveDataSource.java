@@ -16,7 +16,6 @@ package ir.fanap.podstream.DataSources;
  * limitations under the License.
  */
 
-import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,8 +23,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.kafkassl.kafkaclient.ConsumerClient;
-import com.example.kafkassl.kafkaclient.ProducerClient;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.upstream.BaseDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
@@ -33,16 +30,15 @@ import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Assertions;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.util.Properties;
 
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.network.response.DashResponse;
-
-import static ir.fanap.podstream.offlineStream.PodStream.TAG;
 
 
 /**
@@ -150,25 +146,18 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
         readLength = (int) Math.min(readLength, bytesRemaining);
 
         try {
-            if (provider.shouldUpdateBuffer(readPosition, readLength)) {
-                long readLengthBuffer = Math.max(readLength, Constants.DefualtLengthValue);
-                provider.updateBuffer(readPosition, readLengthBuffer);
-            }
 
-            if (provider.isExistInStartBuffer(offset, readLength,readPosition)) {
-                System.arraycopy(provider.getStartBuffer(), offset, buffer, offset, readLength);
-              //  System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
-                Log.e("Buffering", "exist in start:" );
-            } else if (provider.isExistInEndBuffer(offset, readLength)) {
-                System.arraycopy(provider.getEndBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
-                Log.e("Buffering", "exist in end:" );
-            } else {
+//            if (provider.isExistInStartBuffer(readPosition, readLength)) {
+//                Log.e("buffering", "read: start");
+//                System.arraycopy(provider.getStartBuffer(), (int) readPosition, buffer, offset, readLength);
+//            } else {
+                if (provider.shouldUpdateBuffer(readPosition, readLength)) {
+                    long readLengthBuffer = Math.max(readLength, Constants.DefualtLengthValue);
+                    provider.updateBuffer(readPosition, readLengthBuffer);
+                }
 
                 System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
-                Log.e("Buffering", "exist in main:" );
-            }
-
-            System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+//            }
 
         } catch (Exception e) {
             int a = 10;
@@ -176,6 +165,7 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
 
         readPosition += readLength;
         bytesRemaining -= readLength;
+
         return readLength;
     }
 
@@ -208,6 +198,7 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
         }
     }
 
+
     private static RandomAccessFile openLocalFile(Uri uri) throws com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException {
         try {
             return new RandomAccessFile(Assertions.checkNotNull(uri.getPath()), "r");
@@ -229,5 +220,37 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
         provider.release();
     }
 
+    public Thread consuming = new Thread(() -> {
+        final File root = android.os.Environment.getExternalStorageDirectory();
+        for (int i = 2; i <= 30; i++) {
 
+            File file1 = new File(root.getAbsolutePath() + "/s_" + i + ".m4s");
+            byte[] bFile1 = new byte[(int) file1.length()];
+
+            //convert file into array of bytes
+            FileInputStream fileInputStream1 = null;
+            try {
+                fileInputStream1 = new FileInputStream(file1);
+                fileInputStream1.read(bFile1);
+                fileInputStream1.close();
+
+                this.insertnewData(bFile1);
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+        int a = 10;
+    });
+
+
+    public void insertnewData(byte[] newData) {
+//        data = ByteBuffer.allocate(data.length + newData.length)
+//                .put(data)
+//                .put(newData)
+//                .array();
+    }
 }
