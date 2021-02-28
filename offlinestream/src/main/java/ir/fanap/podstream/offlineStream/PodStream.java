@@ -191,14 +191,14 @@ public class PodStream {
         file.setStreamTopic(config.getStreamTopic());
         start = new Date();
 //        if (!checkInCacheExist(file))
-            mCompositeDisposable.add(api.getDashManifest(file.getUrl())
+            api.getDashManifest(file.getUrl())
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .subscribe(response -> {
                                 fileReadyToPlay(response);
                                // addFileToCache(file, response);
                             },
-                            throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
+                            throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage()));
 
     }
 
@@ -286,6 +286,14 @@ public class PodStream {
             isReady = false;
             mCompositeDisposable.dispose();
             provider.release();
+            player.stop(true);
+            player = null;
+
         }
+    }
+
+    public void clean(){
+        releasePlayer();
+        instance=null;
     }
 }

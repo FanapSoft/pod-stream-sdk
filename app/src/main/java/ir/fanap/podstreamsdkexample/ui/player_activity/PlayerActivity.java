@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.podstreamsdkexample.R;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import ir.fanap.podstream.Entity.FileSetup;
@@ -61,14 +62,19 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     }
 
     void showLoading() {
-        if (progressBar.getVisibility() != View.VISIBLE)
+
+        if (progressBar.getVisibility() != View.VISIBLE) {
             progressBar.setVisibility(View.VISIBLE);
+        }
 
     }
-
+    Date startT  ;
     void hideLoading() {
-        if (progressBar.getVisibility() == View.VISIBLE)
+        if (progressBar.getVisibility() == View.VISIBLE) {
+            Log.e("StartDelay", "give response: " + (new Date().getTime() - startT.getTime()));
+
             progressBar.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
@@ -110,6 +116,9 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
             start = false;
             player_la.setVisibility(View.VISIBLE);
         }
+        Log.e("StartDelay", "gotoplay: ");
+
+        startT = new Date();
         prepareToPlayVideo(item);
     }
 
