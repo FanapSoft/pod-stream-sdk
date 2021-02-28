@@ -19,17 +19,17 @@ import java.util.Properties;
 
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstream.network.response.TopicResponse;
 
 public class KafkaDataProvider {
-    interface KafkaProviderCallBack {
-
-    }
 
     public KafkaDataProvider(DashResponse dashFile) {
         isEndBufferFill = false;
         this.consumTopic = dashFile.getConsumTopic();
         this.produceTopic = dashFile.getProduceTopic();
         this.filmLength = dashFile.getSize();
+        if (filmLength ==0)
+            filmLength = 10000;
         final Properties propertiesProducer = new Properties();
         propertiesProducer.setProperty("bootstrap.servers", dashFile.getBrokerAddress());
         producerClient = new ProducerClient(propertiesProducer);
@@ -38,17 +38,35 @@ public class KafkaDataProvider {
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        getStartOfFile();
+
      //   getEndOfFile();
 
     }
 
-    KafkaProviderCallBack listener;
+    public void startStreming(DashResponse dashFile){
+        this.filmLength = dashFile.getSize();
+        getStartOfFile();
+    }
+
+    public KafkaDataProvider(TopicResponse kafkaConfigs) {
+
+        isEndBufferFill = false;
+        consumTopic = kafkaConfigs.getStreamTopic();
+        produceTopic = kafkaConfigs.getControlTopic();
+
+        final Properties propertiesProducer = new Properties();
+        propertiesProducer.setProperty("bootstrap.servers", kafkaConfigs.getBrokerAddress());
+        producerClient = new ProducerClient(propertiesProducer);
+        producerClient.connect();
+        propertiesProducer.setProperty("group.id", "264");
+        propertiesProducer.setProperty("auto.offset.reset", "beginning");
+        consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
+        Date start = new Date();
+        consumerClient.connect();
+        Log.e("testbuffer", "give start of file: " + (new Date().getTime() - start.getTime()));
+
+    }
+
     ConsumerClient consumerClient;
     ProducerClient producerClient;
     String consumTopic;
@@ -63,10 +81,6 @@ public class KafkaDataProvider {
     private long filmLength;
 
     private boolean isEndBufferFill = false;
-    public void setListener(KafkaProviderCallBack listener) {
-        this.listener = listener;
-    }
-
 
     public void getStartOfFile() {
         Date start =new Date();
@@ -215,14 +229,11 @@ public class KafkaDataProvider {
         }
     }
 
-
-
     public void release() {
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(-2);
         producerClient.produceMessege(buffers.array(), ",", produceTopic);
     }
-
 
     private static RandomAccessFile openLocalFile(Uri uri) throws com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException {
         try {

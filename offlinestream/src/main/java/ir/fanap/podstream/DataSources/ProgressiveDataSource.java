@@ -39,6 +39,7 @@ import java.nio.ByteBuffer;
 
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstream.network.response.TopicResponse;
 
 
 /**
@@ -50,7 +51,7 @@ import ir.fanap.podstream.network.response.DashResponse;
 /**
  * A {@link DataSource} for reading local files.
  */
-public final class ProgressiveDataSource extends BaseDataSource implements KafkaDataProvider.KafkaProviderCallBack {
+public final class ProgressiveDataSource extends BaseDataSource{
 
     /**
      * Creates base data source.
@@ -73,8 +74,9 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
         private ProgressiveDataSource dataSource;
         KafkaDataProvider provider;
 
-        public Factory(DashResponse response) {
+        public Factory(DashResponse response, KafkaDataProvider provider) {
             dashFile = response;
+            this.provider = provider;
         }
 
         public ProgressiveDataSource getDataSource() {
@@ -92,7 +94,6 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
 
         @Override
         public ProgressiveDataSource createDataSource() {
-            provider = new KafkaDataProvider(dashFile);
             dataSource = new ProgressiveDataSource(dashFile, provider);
             if (listener != null) {
                 dataSource.addTransferListener(listener);
@@ -113,11 +114,10 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
 
     public ProgressiveDataSource(@NonNull DashResponse dashResponse, @NonNull KafkaDataProvider provider) {
         super(/* isNetwork= */ false);
-        this.provider = provider;
-        this.provider.setListener(this);
+        this.provider = provider;;
         this.filmLength = dashResponse.getSize();
-        this.provider.updateBuffer(0, Constants.DefualtLengthValue);
-
+        if (filmLength ==0)
+            filmLength = 10000;
     }
 
     @Override
@@ -198,59 +198,4 @@ public final class ProgressiveDataSource extends BaseDataSource implements Kafka
         }
     }
 
-
-    private static RandomAccessFile openLocalFile(Uri uri) throws com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException {
-        try {
-            return new RandomAccessFile(Assertions.checkNotNull(uri.getPath()), "r");
-        } catch (FileNotFoundException e) {
-            if (!TextUtils.isEmpty(uri.getQuery()) || !TextUtils.isEmpty(uri.getFragment())) {
-                throw new com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException(
-                        String.format(
-                                "uri has query and/or fragment, which are not supported. Did you call Uri.parse()"
-                                        + " on a string containing '?' or '#'? Use Uri.fromFile(new File(path)) to"
-                                        + " avoid this. path=%s,query=%s,fragment=%s",
-                                uri.getPath(), uri.getQuery(), uri.getFragment()),
-                        e);
-            }
-            throw new com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException(e);
-        }
-    }
-
-    public void release() {
-        provider.release();
-    }
-
-    public Thread consuming = new Thread(() -> {
-        final File root = android.os.Environment.getExternalStorageDirectory();
-        for (int i = 2; i <= 30; i++) {
-
-            File file1 = new File(root.getAbsolutePath() + "/s_" + i + ".m4s");
-            byte[] bFile1 = new byte[(int) file1.length()];
-
-            //convert file into array of bytes
-            FileInputStream fileInputStream1 = null;
-            try {
-                fileInputStream1 = new FileInputStream(file1);
-                fileInputStream1.read(bFile1);
-                fileInputStream1.close();
-
-                this.insertnewData(bFile1);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-        int a = 10;
-    });
-
-
-    public void insertnewData(byte[] newData) {
-//        data = ByteBuffer.allocate(data.length + newData.length)
-//                .put(data)
-//                .put(newData)
-//                .array();
-    }
 }
