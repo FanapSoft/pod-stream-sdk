@@ -49,7 +49,7 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventLi
 
     @Override
     public void destroy() {
-        offlinestreamer.releasePlayer();
+        offlinestreamer.clean();
     }
 
     @Override
