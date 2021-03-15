@@ -22,6 +22,11 @@ import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 
 public class KafkaDataProvider {
+    Listener listener;
+
+    public  interface Listener{
+       void onStreamerIsReady(boolean state);
+    }
 
     public KafkaDataProvider(DashResponse dashFile) {
         isEndBufferFill = false;
@@ -48,8 +53,8 @@ public class KafkaDataProvider {
         getStartOfFile();
     }
 
-    public KafkaDataProvider(TopicResponse kafkaConfigs) {
-
+    public KafkaDataProvider(TopicResponse kafkaConfigs,Listener listener) {
+        this.listener = listener;
         isEndBufferFill = false;
         consumTopic = kafkaConfigs.getStreamTopic();
         produceTopic = kafkaConfigs.getControlTopic();
@@ -64,6 +69,8 @@ public class KafkaDataProvider {
         Date start = new Date();
         consumerClient.connect();
         Log.e("testbuffer", "give start of file: " + (new Date().getTime() - start.getTime()));
+        if(listener!=null)
+            listener.onStreamerIsReady(true);
 
     }
 
@@ -84,14 +91,11 @@ public class KafkaDataProvider {
 
     public void getStartOfFile() {
         Date start =new Date();
-//        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-//        buffers.putLong(-3);
-//        producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
-//        startBuffer = consumerClient.consumingTopic(5000);
         while (startBuffer == null || startBuffer.length < 250000) {
             startBuffer = consumerClient.consumingTopic(1000);
         }
         Log.e("testbuffer", "give start buffer: " + (new Date().getTime()-start.getTime()));
+
 //        Thread taskforstart = new Thread(new Runnable() {
 //            @Override
 //            public void run() {

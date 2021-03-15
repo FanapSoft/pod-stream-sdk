@@ -22,7 +22,7 @@ public class FileSetup {
     }
 
     public String getUrl() {
-        return baseUrl +
+        String url = baseUrl +
                 "?clientId=" + clientId +
                 "&vidoAdress=" + videoAddress +
                 "&quality=" + quality +
@@ -30,6 +30,8 @@ public class FileSetup {
                 "&progressive=" + progressive+
                 "&streamTopic=" + streamTopic+
                 "&controlTopic=" + controlTopic;
+
+        return url;
     }
 
     public FileSetup(Builder builder) {
