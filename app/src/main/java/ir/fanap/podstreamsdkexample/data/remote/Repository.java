@@ -18,7 +18,7 @@ public class Repository {
 
     public List<VideoItem> getVideo() {
         List<VideoItem> items = new ArrayList<>();
-        String[] videoHashcodes = {"2MUMAFQQ6MKQFK84", "A4LGHTOURUCII46D"};
+        String[] videoHashcodes = {"9ZHBEOWS9PM2188E", "XEALFVCIVPZDI4EJ"};
         String[] names = {"video1", "video2"};
         String[] quality = {"320", "320"};
         for (int i = 0; i < videoHashcodes.length; i++) {
