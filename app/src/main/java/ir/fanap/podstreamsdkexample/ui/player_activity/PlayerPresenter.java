@@ -52,9 +52,5 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventLi
         offlinestreamer.clean();
     }
 
-    @Override
-    public void getVideoList() {
-        mView.onRecivedVideoList(repository.getVideo());
-    }
 
 }

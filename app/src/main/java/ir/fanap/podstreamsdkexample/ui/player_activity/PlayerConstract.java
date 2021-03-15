@@ -13,7 +13,7 @@ public interface PlayerConstract {
 
         void hasError(String error);
 
-        void onRecivedVideoList(List<VideoItem> response);
+
 
     }
 
@@ -21,6 +21,6 @@ public interface PlayerConstract {
         void init();
         void prepare(FileSetup fileSetup);
         void destroy();
-        void getVideoList();
+
     }
 }

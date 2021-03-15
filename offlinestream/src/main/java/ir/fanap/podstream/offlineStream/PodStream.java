@@ -5,8 +5,6 @@ import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
 
-import com.example.kafkassl.kafkaclient.ConsumerClient;
-import com.example.kafkassl.kafkaclient.ProducerClient;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -24,8 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Properties;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -40,28 +36,25 @@ import ir.fanap.podstream.network.RetrofitClient;
 import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 
-public class PodStream {
+public class PodStream implements KafkaDataProvider.Listener {
     public static String TAG = "PodStream";
-    private static CompositeDisposable mCompositeDisposable;
+    private  CompositeDisposable mCompositeDisposable;
     private static PodStream instance;
-    private static Activity mContext;
-    private static Gson gson;
-    private static StreamEventListener listener;
-    private static boolean showLog = true;
-    private static StyledPlayerView playerView;
-    private static SimpleExoPlayer player;
-    private static AppApi api;
-    private static HashMap<String, DashResponse> cachManifestUrls;
-    private static ConsumerClient consumerClient;
-    private static ProducerClient producerClient;
-    private static String consumTopic;
-    private static String produceTopic;
-    Date start;
+    private Activity mContext;
+    private Gson gson;
+    private StreamEventListener listener;
+    private boolean showLog = true;
+    private StyledPlayerView playerView;
+    private SimpleExoPlayer player;
+    private AppApi api;
+
+
     private boolean isReady = false;
     private ProgressiveDataSource.Factory dataSourceFactory;
     //    private FileDataSource.Factory dataSourceFactory;
     private MediaSource mediaSource;
-    private static KafkaDataProvider provider;
+    private KafkaDataProvider provider;
+
     private PodStream() {
 
     }
@@ -69,20 +62,21 @@ public class PodStream {
     public synchronized static PodStream init(Activity activity) {
 
         if (instance == null) {
-            mContext = activity;
-            netWorkInit();
             instance = new PodStream();
-            mCompositeDisposable = new CompositeDisposable();
-            gson = new GsonBuilder().setPrettyPrinting().create();
-            initPlayer(activity);
-            cachManifestUrls = new HashMap<>();
-            prepareTopic();
+            instance.setContext(activity);
+            instance.netWorkInit();
+            instance.initPlayer(activity);
+            instance.prepareTopic();
         }
         return instance;
 
     }
 
-    private static void initPlayer(Activity activity) {
+    public void setContext(Activity mContext) {
+        this.mContext = mContext;
+    }
+
+    private void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
 //        builder.setAllocator(new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE));
 //        builder.setBufferDurationsMs(
@@ -140,11 +134,13 @@ public class PodStream {
         });
     }
 
-    private static void netWorkInit() {
+    private void netWorkInit() {
         api = RetrofitClient.getInstance().create(AppApi.class);
+        gson = new GsonBuilder().setPrettyPrinting().create();
+        mCompositeDisposable = new CompositeDisposable();
     }
 
-    private static void prepareTopic() {
+    private void prepareTopic() {
         mCompositeDisposable.add(api.getTopics("http://192.168.112.32/getTopic/?clientId=7936886af8064418b01e97f57c377734")
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -158,25 +154,12 @@ public class PodStream {
 
     private static TopicResponse config;
 
-    private static void connectKafkaProvider(TopicResponse kafkaConfigs) {
+    private void connectKafkaProvider(TopicResponse kafkaConfigs) {
         config = kafkaConfigs;
-        provider = new KafkaDataProvider(kafkaConfigs);
-//        consumTopic = kafkaConfigs.getStreamTopic();
-//        produceTopic = kafkaConfigs.getControlTopic();
-//        final Properties propertiesProducer = new Properties();
-//        propertiesProducer.setProperty("bootstrap.servers", kafkaConfigs.getBrokerAddress());
-//        producerClient = new ProducerClient(propertiesProducer);
-//        producerClient.connect();
-//        propertiesProducer.setProperty("group.id", "264");
-//        propertiesProducer.setProperty("auto.offset.reset", "beginning");
-//        consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
-//        Date start = new Date();
-//        consumerClient.connect();
-//        Log.e("testbuffer", "give response: " + (new Date().getTime() - start.getTime()));
-
+        provider = new KafkaDataProvider(kafkaConfigs, this);
     }
 
-    private static void ShowLog(String logType, String message) {
+    private void ShowLog(String logType, String message) {
         if (showLog)
             Log.e(TAG, logType + ": " + message);
         listener.hasError(message);
@@ -187,48 +170,22 @@ public class PodStream {
     }
 
     public void prepareStreaming(FileSetup file) {
-        file.setControlTopic(config.getControlTopic());
-        file.setStreamTopic(config.getStreamTopic());
-        start = new Date();
-//        if (!checkInCacheExist(file))
+        if(isReady) {
+            file.setControlTopic(config.getControlTopic());
+            file.setStreamTopic(config.getStreamTopic());
             api.getDashManifest(file.getUrl())
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .subscribe(response -> {
                                 fileReadyToPlay(response);
-                               // addFileToCache(file, response);
                             },
                             throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage()));
-
-    }
-
-    private void addFileToCache(FileSetup file, DashResponse response) {
-        if (!cachManifestUrls.containsKey(file.getUrl())) {
-            Log.e(TAG, "add file to cache ");
-            cachManifestUrls.put(file.getUrl(), response);
-        }
-    }
-
-    private boolean checkInCacheExist(FileSetup file) {
-        if (cachManifestUrls.containsKey(file.getUrl())) {
-            Log.e(TAG, "get file from cache ");
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    attachPlayer(cachManifestUrls.get(file.getUrl()));
-
-                }
-            }).start();
-            return true;
         }
 
-        return false;
     }
 
     public void fileReadyToPlay(DashResponse response) {
 
-        Log.e("testbuffer", "give response: " + (new Date().getTime() - start.getTime()));
-        isReady = true;
         mContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -260,25 +217,19 @@ public class PodStream {
         showLog = false;
     }
 
-    public void stopStreaming() {
-
-    }
-
     public void attachPlayer(DashResponse response) {
-        this.provider.startStreming(response);
-        dataSourceFactory = buildDataSourceFactory(response);
-//        dataSourceFactory = buildDataSourceFactory();
-        mediaSource = buildMediaSource();
-        if (player != null) {
-//            if (player.isPlaying()||player.isLoading()) {
-//                Log.e(TAG, "release player: " );
-//                player.release();
-//            }
-
-            player.prepare(mediaSource, false, true);
+        if (isReady) {
+            this.provider.startStreming(response);
+            dataSourceFactory = buildDataSourceFactory(response);
+            mediaSource = buildMediaSource();
+            if (player != null) {
+                player.addMediaSource(mediaSource);
+                player.prepare();
+                player.play();
+            }
+        } else {
+            Log.e(TAG, "consumer in not ready: ");
         }
-
-
     }
 
     public void releasePlayer() {
@@ -288,12 +239,17 @@ public class PodStream {
             provider.release();
             player.stop(true);
             player = null;
-
         }
     }
 
-    public void clean(){
+    public void clean() {
         releasePlayer();
-        instance=null;
+        instance = null;
+    }
+
+    @Override
+    public void onStreamerIsReady(boolean state) {
+        isReady = state;
+        Log.e(TAG, "onStreamerIsReady: " + state);
     }
 }

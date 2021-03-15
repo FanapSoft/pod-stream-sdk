@@ -22,13 +22,10 @@ import ir.fanap.podstreamsdkexample.ui.base.custom.VideoListAdaper;
 
 public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
 
-    RecyclerView recycler_medialist;
     ConstraintLayout player_la;
     PlayerConstract.Presenter presenter;
     ProgressBar progressBar;
-    VideoListAdaper videoListAdaper;
-
-    boolean start = true;
+    String selectedHash = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +35,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     }
 
     private void initviews() {
-        recycler_medialist = findViewById(R.id.recycler_medialist);
-        recycler_medialist.setLayoutManager(new LinearLayoutManager(this));
+        selectedHash = getIntent().getStringExtra("hash");
         player_la = findViewById(R.id.player_la);
         progressBar = findViewById(R.id.progressBar);
     }
@@ -47,13 +43,12 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     public void init() {
         initviews();
         presenter = new PlayerPresenter(this, this);
-
-        videoListAdaper = new VideoListAdaper(new ArrayList<>(), this);
-        videoListAdaper.setmClickListener(this::onItemClick);
-        recycler_medialist.setAdapter(videoListAdaper);
-
-
-        presenter.getVideoList();
+        FileSetup file = new FileSetup.Builder().
+                build(
+                        "7936886af8064418b01e97f57c377734",
+                        selectedHash
+                );
+        presenter.prepare(file);
     }
 
     @Override
@@ -68,10 +63,9 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         }
 
     }
-    Date startT  ;
+
     void hideLoading() {
         if (progressBar.getVisibility() == View.VISIBLE) {
-            Log.e("StartDelay", "give response: " + (new Date().getTime() - startT.getTime()));
 
             progressBar.setVisibility(View.INVISIBLE);
         }
@@ -104,30 +98,5 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         presenter.destroy();
     }
 
-    @Override
-    public void onRecivedVideoList(List<VideoItem> response) {
-        videoListAdaper.setDataList(response);
-    }
 
-
-    public void onItemClick(VideoItem item) {
-        isLoading(true);
-        if (start) {
-            start = false;
-            player_la.setVisibility(View.VISIBLE);
-        }
-        Log.e("StartDelay", "gotoplay: ");
-
-        startT = new Date();
-        prepareToPlayVideo(item);
-    }
-
-    void prepareToPlayVideo(VideoItem item) {
-        FileSetup file = new FileSetup.Builder().
-                build(
-                        "7936886af8064418b01e97f57c377734",
-                        item.getVideoHash()
-                );
-        presenter.prepare(file);
-    }
 }
