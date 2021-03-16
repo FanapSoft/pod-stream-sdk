@@ -65,9 +65,10 @@ public class PodStream implements KafkaDataProvider.Listener {
             instance = new PodStream();
             instance.setContext(activity);
             instance.netWorkInit();
-            instance.initPlayer(activity);
+          //  instance.initPlayer(activity);
             instance.prepareTopic();
         }
+
         return instance;
 
     }
@@ -76,7 +77,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         this.mContext = mContext;
     }
 
-    private void initPlayer(Activity activity) {
+    public void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
 //        builder.setAllocator(new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE));
 //        builder.setBufferDurationsMs(
@@ -132,6 +133,7 @@ public class PodStream implements KafkaDataProvider.Listener {
                 ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.getMessage());
             }
         });
+        Log.e(TAG, "initPlayer: ");
     }
 
     private void netWorkInit() {
@@ -146,9 +148,12 @@ public class PodStream implements KafkaDataProvider.Listener {
                 .observeOn(Schedulers.io())
                 .subscribe(response -> {
                             connectKafkaProvider(response);
-                            Log.e(TAG, "prepareTopic: ");
+                            Log.e(TAG, "get topic: ");
                         },
-                        throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
+                        throwable -> {
+                            Log.e(TAG, "can not get topic: ");
+                            ShowLog(LogTypes.ERROR, throwable.getMessage());
+                        }));
 
     }
 
@@ -178,8 +183,12 @@ public class PodStream implements KafkaDataProvider.Listener {
                     .observeOn(Schedulers.io())
                     .subscribe(response -> {
                                 fileReadyToPlay(response);
+                                Log.e(TAG, "ready  ");
                             },
-                            throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage()));
+                            throwable -> {
+                                ShowLog(LogTypes.ERROR, throwable.getMessage());
+                                Log.e(TAG, "error on play ");
+                            });
         }
     }
 
@@ -232,18 +241,23 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     public void releasePlayer() {
-        if (dataSourceFactory != null) {
-            isReady = false;
-            mCompositeDisposable.dispose();
-            provider.release();
-            player.stop(true);
-            player = null;
+        try {
+            if (dataSourceFactory != null) {
+                mCompositeDisposable.dispose();
+                provider.release();
+                player.stop(true);
+                player = null;
+                Log.e(TAG, "releasePlayer: " );
+            }
+        }catch (Exception e){
+            Log.e(TAG, "exeption: " );
         }
     }
 
     public void clean() {
         releasePlayer();
         instance = null;
+        isReady = false;
     }
 
     @Override
