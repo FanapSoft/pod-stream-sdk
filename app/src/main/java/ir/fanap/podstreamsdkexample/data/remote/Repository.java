@@ -1,12 +1,16 @@
 package ir.fanap.podstreamsdkexample.data.remote;
 
+import android.app.Activity;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import ir.fanap.podstream.offlineStream.PodStream;
 import ir.fanap.podstreamsdkexample.data.VideoItem;
 
 public class Repository {
     private static Repository instance = null;
+    PodStream offlinestreamer;
 
     public synchronized static Repository getInstance() {
         if (instance == null)
@@ -15,6 +19,14 @@ public class Repository {
         return instance;
     }
 
+    public void Streamer(Activity activity) {
+        if (offlinestreamer == null)
+            offlinestreamer = PodStream.init(activity);
+    }
+
+    public PodStream getOfflinestreamer() {
+        return offlinestreamer;
+    }
 
     public List<VideoItem> getVideo() {
         List<VideoItem> items = new ArrayList<>();

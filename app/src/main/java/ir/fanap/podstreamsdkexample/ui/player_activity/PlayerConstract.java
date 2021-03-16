@@ -21,6 +21,6 @@ public interface PlayerConstract {
         void init();
         void prepare(FileSetup fileSetup);
         void destroy();
-
+        void setPlayer();
     }
 }

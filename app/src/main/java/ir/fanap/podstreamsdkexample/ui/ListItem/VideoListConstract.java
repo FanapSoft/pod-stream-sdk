@@ -14,5 +14,6 @@ public interface VideoListConstract {
         void init();
         void destroy();
         void getVideoList();
+
     }
 }

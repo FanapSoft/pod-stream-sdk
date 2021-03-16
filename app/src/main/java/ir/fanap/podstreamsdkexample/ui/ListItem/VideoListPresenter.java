@@ -11,11 +11,12 @@ import ir.fanap.podstreamsdkexample.data.remote.Repository;
 public class VideoListPresenter implements VideoListConstract.Presenter {
 
     VideoListConstract.View mView;
-    Context mContext;
+    Activity mContext;
     Repository repository;
 
     public VideoListPresenter(Activity context, VideoListConstract.View view) {
         repository = Repository.getInstance();
+        repository.Streamer(context);
         mContext = context;
         mView = view;
         init();
@@ -28,7 +29,7 @@ public class VideoListPresenter implements VideoListConstract.Presenter {
 
     @Override
     public void destroy() {
-
+        repository.getOfflinestreamer().clean();
     }
 
     @Override

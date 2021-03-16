@@ -66,7 +66,6 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
             start = false;
         }
         Log.e("StartDelay", "gotoplay: ");
-
         prepareToPlayVideo(item);
     }
 
