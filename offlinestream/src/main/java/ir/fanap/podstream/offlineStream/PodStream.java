@@ -181,7 +181,6 @@ public class PodStream implements KafkaDataProvider.Listener {
                             },
                             throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage()));
         }
-
     }
 
     public void fileReadyToPlay(DashResponse response) {
