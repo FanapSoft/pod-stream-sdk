@@ -1,17 +1,16 @@
 package ir.fanap.podstream.DataSources;
 
-import android.app.Activity;
 import android.net.Uri;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
+import com.example.kafkassl.kafkaclient.ConsumResult;
 import com.example.kafkassl.kafkaclient.ConsumerClient;
 import com.example.kafkassl.kafkaclient.ProducerClient;
-import com.google.android.exoplayer2.upstream.FileDataSource;
 import com.google.android.exoplayer2.util.Assertions;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -19,14 +18,18 @@ import java.util.Date;
 import java.util.Properties;
 
 import ir.fanap.podstream.Util.Constants;
+import ir.fanap.podstream.Util.Utils;
 import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 
 public class KafkaDataProvider {
     Listener listener;
+    DashResponse dashFile;
 
-    public  interface Listener{
-       void onStreamerIsReady(boolean state);
+    public interface Listener {
+        void onStreamerIsReady(boolean state);
+
+        void onFileReady(DashResponse dashFile);
     }
 
     public KafkaDataProvider(DashResponse dashFile) {
@@ -34,7 +37,7 @@ public class KafkaDataProvider {
         this.consumTopic = dashFile.getConsumTopic();
         this.produceTopic = dashFile.getProduceTopic();
         this.filmLength = dashFile.getSize();
-        if (filmLength ==0)
+        if (filmLength == 0)
             filmLength = 10000;
         final Properties propertiesProducer = new Properties();
         propertiesProducer.setProperty("bootstrap.servers", dashFile.getBrokerAddress());
@@ -45,16 +48,43 @@ public class KafkaDataProvider {
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
 
-     //   getEndOfFile();
+        //   getEndOfFile();
 
     }
 
-    public void startStreming(DashResponse dashFile){
+//    public void startStreming(DashResponse dashFile) {
+//        this.dashFile = dashFile;
+//        this.filmLength = dashFile.getSize();
+//
+//        getStartOfFile();
+//    }
+
+    public void startStreming(DashResponse dashFile) {
+        this.dashFile = dashFile;
         this.filmLength = dashFile.getSize();
-        getStartOfFile();
+        startBuffer = null;
+        while (startBuffer == null || startBuffer.length < 250000) {
+            startBuffer = this.consumerClient.consumingWithKey(100).getValue();
+        }
     }
 
-    public KafkaDataProvider(TopicResponse kafkaConfigs,Listener listener) {
+    public void prepareDashFileForPlay(String Hash, String Token) {
+        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
+        buffers.putLong(-5);
+        producerClient.produceMessege(buffers.array(), Hash + "," + Token, produceTopic);
+        String key = "-1";
+        while(!key.startsWith("5")){
+            ConsumResult cr = consumerClient.consumingWithKey(1000);
+            key = new String(cr.getKey());
+            long fileSize = Utils.byteArrayToLong(cr.getValue());
+            this.dashFile .setSize(fileSize);
+        }
+        if(listener!=null) {
+            listener.onFileReady(this.dashFile);
+        }
+    }
+
+    public KafkaDataProvider(TopicResponse kafkaConfigs, Listener listener) {
         this.listener = listener;
         isEndBufferFill = false;
         consumTopic = kafkaConfigs.getStreamTopic();
@@ -67,9 +97,8 @@ public class KafkaDataProvider {
         propertiesProducer.setProperty("group.id", "264");
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
-        Date start = new Date();
+
         consumerClient.connect();
-        Log.e("testbuffer", "give start of file: " + (new Date().getTime() - start.getTime()));
         if(listener!=null)
             listener.onStreamerIsReady(true);
 
@@ -77,6 +106,7 @@ public class KafkaDataProvider {
 
     ConsumerClient consumerClient;
     ProducerClient producerClient;
+
     String consumTopic;
     String produceTopic;
 
@@ -90,28 +120,6 @@ public class KafkaDataProvider {
 
     private boolean isEndBufferFill = false;
 
-    public void getStartOfFile() {
-        Date start =new Date();
-        while (startBuffer == null || startBuffer.length < 250000) {
-            startBuffer = consumerClient.consumingTopic(1000);
-        }
-        Log.e("testbuffer", "give start buffer: " + (new Date().getTime()-start.getTime()));
-
-//        Thread taskforstart = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-//                buffers.putLong(-3);
-//                producerClient.produceMessege(buffers.array(), 0 + "," + 250000, produceTopic);
-//                startBuffer = consumerClient.consumingTopic(5);
-//                while (startBuffer == null || startBuffer.length < 250000) {
-//                    startBuffer = consumerClient.consumingTopic(5);
-//                }
-//                Log.e("buffering", "start is done" + startBuffer.length);
-//            }
-//        });
-//        taskforstart.start();
-    }
 
     public void getEndOfFile() {
         Thread taskforend = new Thread(new Runnable() {
@@ -158,7 +166,6 @@ public class KafkaDataProvider {
     int endBufferEndIndex = 0;
 
     public int getEndBufferStartOffset() {
-        Log.e("testtete", "getEndBufferStartOffset: ");
         return endBufferStartIndex;
     }
 
