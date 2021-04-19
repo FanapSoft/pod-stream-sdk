@@ -17,19 +17,27 @@ public class FileSetup {
 
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
+    public String getVideoAddress() {
+        return videoAddress;
+    }
+
     public void setControlTopic(String controlTopic) {
         this.controlTopic = controlTopic;
     }
 
     public String getUrl() {
         String url = baseUrl +
-                "?clientId=" + clientId +
-                "&vidoAdress=" + videoAddress +
+                "?token=" + clientId +
+                "&hashFile=" + videoAddress +
                 "&quality=" + quality +
                 "&mobile=" + mobile +
                 "&progressive=" + progressive+
-                "&streamTopic=" + streamTopic+
-                "&controlTopic=" + controlTopic;
+                "&consumTopic=" + streamTopic+
+                "&produceTopic=" + controlTopic;
 
         return url;
     }

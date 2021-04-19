@@ -21,8 +21,6 @@ import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.util.Date;
-
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.DataSources.FileDataSource;
@@ -167,7 +165,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void ShowLog(String logType, String message) {
         if (showLog)
             Log.e(TAG, logType + ": " + message);
-        listener.hasError(message);
+        if (listener != null)
+            listener.hasError(message);
     }
 
     public void setListener(StreamEventListener listener) {
@@ -175,22 +174,39 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     public void prepareStreaming(FileSetup file) {
-        if(isReady) {
-            file.setControlTopic(config.getControlTopic());
-            file.setStreamTopic(config.getStreamTopic());
-            api.getDashManifest(file.getUrl())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .subscribe(response -> {
-                                fileReadyToPlay(response);
-                                Log.e(TAG, "ready  ");
-                            },
-                            throwable -> {
-                                ShowLog(LogTypes.ERROR, throwable.getMessage());
-                                Log.e(TAG, "error on play ");
-                            });
+        if (isReady) {
+            if (isCheck) {
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        provider.prepareDashFileForPlay(file.getVideoAddress(), file.getClientId());
+                    }
+                });
+                t.start();
+            } else {
+                file.setControlTopic(config.getControlTopic());
+                file.setStreamTopic(config.getStreamTopic());
+                api.getDashManifest(file.getUrl())
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(Schedulers.io())
+                        .subscribe(response -> {
+                                    fileReadyToPlay(response);
+                                    isCheck = true;
+                                    Log.e(TAG, "ready  ");
+                                },
+                                throwable -> {
+                                    ShowLog(LogTypes.ERROR, throwable.getMessage());
+                                    Log.e(TAG, "error on play ");
+                                });
+            }
         }
     }
+
+    void test() {
+
+    }
+
+    boolean isCheck = false;
 
     public void fileReadyToPlay(DashResponse response) {
 
@@ -244,7 +260,6 @@ public class PodStream implements KafkaDataProvider.Listener {
         try {
             if (dataSourceFactory != null) {
                 mCompositeDisposable.dispose();
-                provider.release();
                 player.stop(true);
                 player = null;
                 Log.e(TAG, "releasePlayer: " );
@@ -256,6 +271,7 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     public void clean() {
         releasePlayer();
+        provider.release();
         instance = null;
         isReady = false;
     }
@@ -264,5 +280,10 @@ public class PodStream implements KafkaDataProvider.Listener {
     public void onStreamerIsReady(boolean state) {
         isReady = state;
         Log.e(TAG, "onStreamerIsReady: " + state);
+    }
+
+    @Override
+    public void onFileReady(DashResponse dashFile) {
+        fileReadyToPlay(dashFile);
     }
 }
