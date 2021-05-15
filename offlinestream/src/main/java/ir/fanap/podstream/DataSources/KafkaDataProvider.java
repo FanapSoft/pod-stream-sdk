@@ -19,6 +19,7 @@ import java.util.Properties;
 
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.Util.Utils;
+import ir.fanap.podstream.Util.ssl.SSLHelper;
 import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 
@@ -33,6 +34,7 @@ public class KafkaDataProvider {
     }
 
     public KafkaDataProvider(DashResponse dashFile) {
+
         isEndBufferFill = false;
         this.consumTopic = dashFile.getConsumTopic();
         this.produceTopic = dashFile.getProduceTopic();
@@ -45,6 +47,7 @@ public class KafkaDataProvider {
         producerClient.connect();
         propertiesProducer.setProperty("group.id", "264");
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
+
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
 
@@ -92,12 +95,19 @@ public class KafkaDataProvider {
 
         final Properties propertiesProducer = new Properties();
         propertiesProducer.setProperty("bootstrap.servers", kafkaConfigs.getBrokerAddress());
+        propertiesProducer.setProperty("security.protocol", "SASL_SSL");
+        propertiesProducer.setProperty("sasl.mechanisms", "PLAIN");
+        propertiesProducer.setProperty("sasl.username", "rrrr");
+        propertiesProducer.setProperty("sasl.password", "rrrr");
+        propertiesProducer.setProperty("ssl.ca.location", kafkaConfigs.getSslPath());
+        propertiesProducer.setProperty("ssl.key.password", "masoud68");
+
         producerClient = new ProducerClient(propertiesProducer);
         producerClient.connect();
+
         propertiesProducer.setProperty("group.id", "264");
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
-
         consumerClient.connect();
         if(listener!=null)
             listener.onStreamerIsReady(true);

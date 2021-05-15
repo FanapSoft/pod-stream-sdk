@@ -24,6 +24,8 @@ public class DashResponse implements Serializable {
     @SerializedName("manifest")
     private String manifest;
 
+
+
     @Expose
     @SerializedName("size")
     private long size;
@@ -51,6 +53,8 @@ public class DashResponse implements Serializable {
     public void setSize(long size) {
         this.size = size;
     }
+
+
 
     public String toString(DashResponse response) {
         Gson gson = new Gson();

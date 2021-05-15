@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 import ir.fanap.podstream.Entity.FileSetup;
+import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstreamsdkexample.data.VideoItem;
 import ir.fanap.podstreamsdkexample.ui.base.custom.VideoListAdaper;
 
@@ -45,7 +46,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         presenter = new PlayerPresenter(this, this);
         FileSetup file = new FileSetup.Builder().
                 build(
-                        "7936886af8064418b01e97f57c377734",
+                        Constants.Token,
                         selectedHash
                 );
         presenter.prepare(file);
