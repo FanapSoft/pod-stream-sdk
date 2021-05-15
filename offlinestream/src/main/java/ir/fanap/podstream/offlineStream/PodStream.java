@@ -28,7 +28,9 @@ import ir.fanap.podstream.DataSources.KafkaDataProvider;
 import ir.fanap.podstream.DataSources.ProgressiveDataSource;
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.R;
+import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.Util.LogTypes;
+import ir.fanap.podstream.Util.ssl.SSLHelper;
 import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
 import ir.fanap.podstream.network.response.DashResponse;
@@ -52,7 +54,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     //    private FileDataSource.Factory dataSourceFactory;
     private MediaSource mediaSource;
     private KafkaDataProvider provider;
-
+    private SSLHelper sslHelper;
     private PodStream() {
 
     }
@@ -63,6 +65,7 @@ public class PodStream implements KafkaDataProvider.Listener {
             instance = new PodStream();
             instance.setContext(activity);
             instance.netWorkInit();
+
           //  instance.initPlayer(activity);
             instance.prepareTopic();
         }
@@ -73,7 +76,14 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     public void setContext(Activity mContext) {
         this.mContext = mContext;
+        sslHelper = new SSLHelper();
+        try {
+            sslHelper.generateFile(Constants.CERT_FILE, mContext);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 
     public void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
@@ -141,10 +151,11 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void prepareTopic() {
-        mCompositeDisposable.add(api.getTopics("http://192.168.112.32/getTopic/?clientId=7936886af8064418b01e97f57c377734")
+        mCompositeDisposable.add(api.getTopics(Constants.End_Point_Topic)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(response -> {
+                            response.setsslPath(sslHelper.getCart().getAbsolutePath());
                             connectKafkaProvider(response);
                             Log.e(TAG, "get topic: ");
                         },

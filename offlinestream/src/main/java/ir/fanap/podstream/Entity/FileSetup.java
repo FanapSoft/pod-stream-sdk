@@ -1,6 +1,8 @@
 package ir.fanap.podstream.Entity;
 
 
+import ir.fanap.podstream.Util.Constants;
+
 public class FileSetup {
 
     private final String baseUrl;
@@ -54,7 +56,7 @@ public class FileSetup {
 
     public static class Builder {
 
-        String baseUrl = "http://192.168.112.32:80/register/";
+        String baseUrl = Constants.End_Point_Register;
         String clientId;
         String videoAddress;
         int quality = 240;

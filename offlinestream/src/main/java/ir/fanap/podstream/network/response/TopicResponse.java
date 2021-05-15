@@ -16,7 +16,20 @@ public class TopicResponse implements Serializable {
     @SerializedName("streamTopic")
     private String streamTopic;
 
+    @Expose
+    @SerializedName("brokerAddress")
+    private String brokerAddress;
+
     //private String brokerAddress = "192.168.112.32:9092";
+
+    private String sslPath;
+    public String getSslPath() {
+        return sslPath;
+    }
+
+    public void setsslPath(String sslPath) {
+        this.sslPath = sslPath;
+    }
 
     public TopicResponse(String controlTopic, String streamTopic) {
         this.controlTopic = controlTopic;
@@ -48,6 +61,11 @@ public class TopicResponse implements Serializable {
     }
 
     public String getBrokerAddress() {
-        return "192.168.112.32:9092";
+        return "188.75.65.122:9092,188.75.65.122:9093";
+//        return brokerAddress;
+    }
+
+    public void setBrokerAddress(String brokerAddress) {
+        this.brokerAddress = brokerAddress;
     }
 }

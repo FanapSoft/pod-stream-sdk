@@ -70,11 +70,7 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
     }
 
     void prepareToPlayVideo(VideoItem item) {
-        FileSetup file = new FileSetup.Builder().
-                build(
-                        "7936886af8064418b01e97f57c377734",
-                        item.getVideoHash()
-                );
+
         Intent intent = new Intent(this, PlayerActivity.class);
         intent.putExtra("hash",item.getVideoHash());
         startActivity(intent);
