@@ -2,7 +2,7 @@ package ir.fanap.podstream.offlineStream;
 
 public interface StreamEventListener {
 
-    void onFileReady();
+    void onStreamerReady(boolean state);
 
     void onIsLoadingChanged(boolean isLoading);
 

@@ -46,16 +46,11 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         presenter = new PlayerPresenter(this, this);
         FileSetup file = new FileSetup.Builder().
                 build(
-                        Constants.Token,
                         selectedHash
                 );
         presenter.prepare(file);
     }
 
-    @Override
-    public void onFileReady() {
-
-    }
 
     void showLoading() {
 
@@ -70,6 +65,11 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
 
             progressBar.setVisibility(View.INVISIBLE);
         }
+    }
+
+    @Override
+    public void onStreamerReady(boolean state) {
+
     }
 
     @Override

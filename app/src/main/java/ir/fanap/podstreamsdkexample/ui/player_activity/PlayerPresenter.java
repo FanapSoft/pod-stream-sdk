@@ -33,9 +33,11 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventLi
         offlinestreamer.prepareStreaming(file);
     }
 
+
+
     @Override
-    public void onFileReady() {
-        mView.onFileReady();
+    public void onStreamerReady(boolean state) {
+        mView.onStreamerReady(state);
     }
 
     @Override

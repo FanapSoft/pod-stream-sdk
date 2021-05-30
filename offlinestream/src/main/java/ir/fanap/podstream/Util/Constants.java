@@ -28,9 +28,9 @@ public class Constants {
             "-----END CERTIFICATE-----";
     //String Base = "http://192.168.112.32:80/register/";
     public static String End_Point_Base = "http://offline-stream.pod.ir:80/";
-    public static String Token = "9468b491ab4245caa4b7f264d9e2f901";//7936886af8064418b01e97f57c377734
+    //7936886af8064418b01e97f57c377734
     public static String End_Point_Register = End_Point_Base + "register/";
-    public static String End_Point_Topic = End_Point_Base + "getTopic/?clientId="+Token;
+    public static String End_Point_Topic = End_Point_Base + "getTopic/?clientId=";
 
 
 }

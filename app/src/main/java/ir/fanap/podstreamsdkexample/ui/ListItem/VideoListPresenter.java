@@ -8,23 +8,33 @@ import ir.fanap.podstream.offlineStream.PodStream;
 import ir.fanap.podstream.offlineStream.StreamEventListener;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
-public class VideoListPresenter implements VideoListConstract.Presenter {
+public class VideoListPresenter implements VideoListConstract.Presenter, StreamEventListener {
 
     VideoListConstract.View mView;
     Activity mContext;
     Repository repository;
+    String token;
 
     public VideoListPresenter(Activity context, VideoListConstract.View view) {
-        repository = Repository.getInstance();
-        repository.Streamer(context);
         mContext = context;
         mView = view;
-        init();
+        repository = Repository.getInstance();
+
     }
 
-    @Override
-    public void init() {
+    int a = 0;
 
+    @Override
+    public void init(String token) {
+        repository.Streamer(mContext, token);
+        if (a == 0) {
+            setlistener();
+            a = 5;
+        }
+    }
+
+    public void setlistener() {
+        repository.getOfflinestreamer().setListener(this);
     }
 
     @Override
@@ -37,4 +47,18 @@ public class VideoListPresenter implements VideoListConstract.Presenter {
         mView.onRecivedVideoList(repository.getVideo());
     }
 
+    @Override
+    public void onStreamerReady(boolean state) {
+        mView.onStreamerReady(state);
+    }
+
+    @Override
+    public void onIsLoadingChanged(boolean isLoading) {
+
+    }
+
+    @Override
+    public void hasError(String error) {
+
+    }
 }

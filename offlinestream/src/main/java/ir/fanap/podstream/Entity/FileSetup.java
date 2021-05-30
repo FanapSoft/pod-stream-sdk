@@ -6,7 +6,6 @@ import ir.fanap.podstream.Util.Constants;
 public class FileSetup {
 
     private final String baseUrl;
-    private final String clientId;
     private final String videoAddress;
     private final int quality;
     private final boolean mobile;
@@ -19,10 +18,6 @@ public class FileSetup {
 
     }
 
-    public String getClientId() {
-        return clientId;
-    }
-
     public String getVideoAddress() {
         return videoAddress;
     }
@@ -31,7 +26,7 @@ public class FileSetup {
         this.controlTopic = controlTopic;
     }
 
-    public String getUrl() {
+    public String getUrl(String clientId) {
         String url = baseUrl +
                 "?token=" + clientId +
                 "&hashFile=" + videoAddress +
@@ -47,7 +42,6 @@ public class FileSetup {
     public FileSetup(Builder builder) {
 
         this.baseUrl = builder.baseUrl;
-        this.clientId = builder.clientId;
         this.videoAddress = builder.videoAddress;
         this.quality = builder.quality;
         this.mobile = builder.mobile;
@@ -57,7 +51,7 @@ public class FileSetup {
     public static class Builder {
 
         String baseUrl = Constants.End_Point_Register;
-        String clientId;
+//        String clientId;
         String videoAddress;
         int quality = 240;
         boolean mobile = true;
@@ -84,8 +78,8 @@ public class FileSetup {
         }
 
 
-        public FileSetup build(String clientId, String videoAddress) {
-            this.clientId = clientId;
+        public FileSetup build(String videoAddress) {
+//            this.clientId = clientId;
             this.videoAddress = videoAddress;
             return new FileSetup(this);
         }
