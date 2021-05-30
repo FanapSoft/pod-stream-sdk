@@ -24,6 +24,8 @@ public class Repository {
             offlinestreamer = PodStream.init(activity, token);
         else
             offlinestreamer.setToken(token);
+
+        offlinestreamer.prepareTopic();
     }
 
     public PodStream getOfflinestreamer() {

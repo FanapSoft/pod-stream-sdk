@@ -75,7 +75,7 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     }
 
-    public void setContext(Activity mContext) {
+    private void setContext(Activity mContext) {
         this.mContext = mContext;
         sslHelper = new SSLHelper();
         try {
@@ -84,9 +84,9 @@ public class PodStream implements KafkaDataProvider.Listener {
             e.printStackTrace();
         }
     }
+
     public void setToken(String token) {
        this.token = token;
-       instance.prepareTopic();
     }
 
 
@@ -155,7 +155,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         mCompositeDisposable = new CompositeDisposable();
     }
 
-    private void prepareTopic() {
+    public void prepareTopic() {
         mCompositeDisposable.add(api.getTopics(Constants.End_Point_Topic + token)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -224,7 +224,7 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     boolean isCheck = false;
 
-    public void fileReadyToPlay(DashResponse response) {
+    private void fileReadyToPlay(DashResponse response) {
 
         mContext.runOnUiThread(new Runnable() {
             @Override
@@ -257,7 +257,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         showLog = false;
     }
 
-    public void attachPlayer(DashResponse response) {
+    private void attachPlayer(DashResponse response) {
         if (isReady) {
             this.provider.startStreming(response);
             dataSourceFactory = buildDataSourceFactory(response);
