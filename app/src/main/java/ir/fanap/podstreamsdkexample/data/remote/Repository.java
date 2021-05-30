@@ -19,9 +19,11 @@ public class Repository {
         return instance;
     }
 
-    public void Streamer(Activity activity) {
+    public void Streamer(Activity activity, String token) {
         if (offlinestreamer == null)
-            offlinestreamer = PodStream.init(activity);
+            offlinestreamer = PodStream.init(activity, token);
+        else
+            offlinestreamer.setToken(token);
     }
 
     public PodStream getOfflinestreamer() {
@@ -32,10 +34,10 @@ public class Repository {
         List<VideoItem> items = new ArrayList<>();
 
         // "I11TQ7KAY4ZWQ3E", "U6EG9YVLL6XZ1DR", "ZHBEOWS9PM2188E",
-        String[] videoHashcodes = {"5DLLXYSGNB7OQCRC", "DMTBQD6X2U3AZIG1","6FVVFGQEPY4ZSF36","9OIACUOZ8PYO46YK","ABYALWPAE1ZDO4BR"};
-       // String[] videoHashcodes = {"9ZHBEOWS9PM2188E", "XEALFVCIVPZDI4EJ","1U6EG9YVLL6XZ1DR"};
-        String[] names = {"video1", "video2","test3", "video2","test3"};
-        String[] quality = {"320", "320","320", "320","320"};
+        String[] videoHashcodes = {"5DLLXYSGNB7OQCRC", "DMTBQD6X2U3AZIG1", "6FVVFGQEPY4ZSF36", "9OIACUOZ8PYO46YK", "ABYALWPAE1ZDO4BR"};
+        // String[] videoHashcodes = {"9ZHBEOWS9PM2188E", "XEALFVCIVPZDI4EJ","1U6EG9YVLL6XZ1DR"};
+        String[] names = {"video1", "video2", "test3", "video2", "test3"};
+        String[] quality = {"320", "320", "320", "320", "320"};
         for (int i = 0; i < videoHashcodes.length; i++) {
             VideoItem item = new VideoItem();
             item.setVideoHash(videoHashcodes[i]);

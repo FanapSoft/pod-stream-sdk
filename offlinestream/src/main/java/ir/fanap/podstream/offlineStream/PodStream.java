@@ -38,7 +38,7 @@ import ir.fanap.podstream.network.response.TopicResponse;
 
 public class PodStream implements KafkaDataProvider.Listener {
     public static String TAG = "PodStream";
-    private  CompositeDisposable mCompositeDisposable;
+    private CompositeDisposable mCompositeDisposable;
     private static PodStream instance;
     private Activity mContext;
     private Gson gson;
@@ -47,7 +47,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     private StyledPlayerView playerView;
     private SimpleExoPlayer player;
     private AppApi api;
-
+    public String token = "193e8f07232546d6ac0d56784ff91c41";
 
     private boolean isReady = false;
     private ProgressiveDataSource.Factory dataSourceFactory;
@@ -55,19 +55,20 @@ public class PodStream implements KafkaDataProvider.Listener {
     private MediaSource mediaSource;
     private KafkaDataProvider provider;
     private SSLHelper sslHelper;
+
     private PodStream() {
 
     }
 
-    public synchronized static PodStream init(Activity activity) {
+    public synchronized static PodStream init(Activity activity,String token) {
 
         if (instance == null) {
             instance = new PodStream();
             instance.setContext(activity);
             instance.netWorkInit();
-
-          //  instance.initPlayer(activity);
-            instance.prepareTopic();
+            instance.setToken(token);
+            //  instance.initPlayer(activity);
+//            instance.prepareTopic();
         }
 
         return instance;
@@ -82,6 +83,10 @@ public class PodStream implements KafkaDataProvider.Listener {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public void setToken(String token) {
+       this.token = token;
+       instance.prepareTopic();
     }
 
 
@@ -151,7 +156,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void prepareTopic() {
-        mCompositeDisposable.add(api.getTopics(Constants.End_Point_Topic)
+        mCompositeDisposable.add(api.getTopics(Constants.End_Point_Topic + token)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(response -> {
@@ -190,14 +195,14 @@ public class PodStream implements KafkaDataProvider.Listener {
                 Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        provider.prepareDashFileForPlay(file.getVideoAddress(), file.getClientId());
+                        provider.prepareDashFileForPlay(file.getVideoAddress(), token);
                     }
                 });
                 t.start();
             } else {
                 file.setControlTopic(config.getControlTopic());
                 file.setStreamTopic(config.getStreamTopic());
-                api.getDashManifest(file.getUrl())
+                api.getDashManifest(file.getUrl(token))
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
                         .subscribe(response -> {
@@ -235,7 +240,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private ProgressiveDataSource.Factory buildDataSourceFactory(DashResponse response) {
-        return new ProgressiveDataSource.Factory(response,provider);
+        return new ProgressiveDataSource.Factory(response, provider);
     }
 
     private MediaSource buildMediaSource() {
@@ -273,10 +278,10 @@ public class PodStream implements KafkaDataProvider.Listener {
                 mCompositeDisposable.dispose();
                 player.stop(true);
                 player = null;
-                Log.e(TAG, "releasePlayer: " );
+                Log.e(TAG, "releasePlayer: ");
             }
-        }catch (Exception e){
-            Log.e(TAG, "exeption: " );
+        } catch (Exception e) {
+            Log.e(TAG, "exeption: ");
         }
     }
 
@@ -290,6 +295,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     @Override
     public void onStreamerIsReady(boolean state) {
         isReady = state;
+        listener.onStreamerReady(state);
         Log.e(TAG, "onStreamerIsReady: " + state);
     }
 
