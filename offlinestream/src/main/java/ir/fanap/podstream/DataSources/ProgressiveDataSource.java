@@ -17,29 +17,21 @@ package ir.fanap.podstream.DataSources;
  */
 
 import android.net.Uri;
-import android.text.TextUtils;
-import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+//import androidx.annotation.NonNull;
+//import androidx.annotation.Nullable;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.upstream.BaseDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.TransferListener;
-import com.google.android.exoplayer2.util.Assertions;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.network.response.DashResponse;
-import ir.fanap.podstream.network.response.TopicResponse;
 
 
 /**
@@ -66,9 +58,9 @@ public final class ProgressiveDataSource extends BaseDataSource{
     /**
      * {@link DataSource.Factory} for {@link com.google.android.exoplayer2.upstream.FileDataSource} instances.
      */
-    public static final class Factory implements DataSource.Factory {
+    public static final class Factory implements DataSource.Factory{
 
-        @Nullable
+//        @Nullable
         private TransferListener listener;
         DashResponse dashFile;
         private ProgressiveDataSource dataSource;
@@ -102,9 +94,9 @@ public final class ProgressiveDataSource extends BaseDataSource{
         }
     }
 
-    @Nullable
+//    @Nullable
     private RandomAccessFile file;
-    @Nullable
+//    @Nullable
     private Uri uri;
     private long bytesRemaining;
     private boolean opened;
@@ -112,10 +104,10 @@ public final class ProgressiveDataSource extends BaseDataSource{
     private long readPosition;
     KafkaDataProvider provider;
 
-    public ProgressiveDataSource(@NonNull DashResponse dashResponse, @NonNull KafkaDataProvider provider) {
+    public ProgressiveDataSource(DashResponse mpegDashResponse, KafkaDataProvider provider) {
         super(/* isNetwork= */ false);
         this.provider = provider;;
-        this.filmLength = dashResponse.getSize();
+        this.filmLength = mpegDashResponse.getSize();
         if (filmLength ==0)
             filmLength = 10000;
     }
@@ -171,7 +163,7 @@ public final class ProgressiveDataSource extends BaseDataSource{
 
 
     @Override
-    @Nullable
+//    @Nullable
     public Uri getUri() {
         return uri;
     }

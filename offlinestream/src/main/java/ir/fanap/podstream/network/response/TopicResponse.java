@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-public class TopicResponse implements Serializable {
+public class TopicResponse implements Serializable,AvoidObfuscate{
 
     @Expose
     @SerializedName("controlTopic")
@@ -21,6 +21,11 @@ public class TopicResponse implements Serializable {
     private String brokerAddress;
 
     //private String brokerAddress = "192.168.112.32:9092";
+
+
+    @Expose
+    @SerializedName("size")
+    private long size;
 
     private String sslPath;
     public String getSslPath() {
@@ -52,6 +57,14 @@ public class TopicResponse implements Serializable {
     public TopicResponse setStreamTopic(String streamTopic) {
         this.streamTopic = streamTopic;
         return this;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public long getSize() {
+        return size;
     }
 
     public String toString(TopicResponse response) {

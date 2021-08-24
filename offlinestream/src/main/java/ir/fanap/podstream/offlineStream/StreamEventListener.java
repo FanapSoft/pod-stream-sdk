@@ -1,6 +1,8 @@
 package ir.fanap.podstream.offlineStream;
 
-public interface StreamEventListener {
+import ir.fanap.podstream.network.response.AvoidObfuscate;
+
+public interface StreamEventListener extends AvoidObfuscate {
 
     void onStreamerReady(boolean state);
 

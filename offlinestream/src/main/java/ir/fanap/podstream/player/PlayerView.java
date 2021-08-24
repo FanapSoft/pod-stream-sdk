@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 
+
 public class PlayerView extends TextureView {
 
     public PlayerView(@NonNull Context context) {

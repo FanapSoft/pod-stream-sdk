@@ -1,12 +1,11 @@
 package ir.fanap.podstream.network.response;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-public class DashResponse implements Serializable {
+public class DashResponse implements Serializable,AvoidObfuscate {
 
     @Expose
     @SerializedName("consumTopic")
@@ -19,12 +18,6 @@ public class DashResponse implements Serializable {
     @Expose
     @SerializedName("brokerAddress")
     private String brokerAddress;
-
-    @Expose
-    @SerializedName("manifest")
-    private String manifest;
-
-
 
     @Expose
     @SerializedName("size")
@@ -42,23 +35,11 @@ public class DashResponse implements Serializable {
         return brokerAddress;
     }
 
-    public String getManifest() {
-        return manifest;
-    }
-
     public long getSize() {
         return size;
     }
 
     public void setSize(long size) {
         this.size = size;
-    }
-
-
-
-    public String toString(DashResponse response) {
-        Gson gson = new Gson();
-        String json = gson.toJson(response);
-        return json;
     }
 }
