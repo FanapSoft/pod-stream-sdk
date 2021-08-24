@@ -7,18 +7,10 @@ import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.podstreamsdkexample.R;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 import ir.fanap.podstream.Entity.FileSetup;
-import ir.fanap.podstreamsdkexample.data.VideoItem;
-import ir.fanap.podstreamsdkexample.ui.base.custom.VideoListAdaper;
 
 public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
 
@@ -45,16 +37,11 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         presenter = new PlayerPresenter(this, this);
         FileSetup file = new FileSetup.Builder().
                 build(
-                        "7936886af8064418b01e97f57c377734",
                         selectedHash
                 );
         presenter.prepare(file);
     }
 
-    @Override
-    public void onFileReady() {
-
-    }
 
     void showLoading() {
 
@@ -69,6 +56,11 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
 
             progressBar.setVisibility(View.INVISIBLE);
         }
+    }
+
+    @Override
+    public void onStreamerReady(boolean state) {
+
     }
 
     @Override

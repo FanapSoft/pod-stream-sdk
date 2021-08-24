@@ -7,7 +7,7 @@ import ir.fanap.podstreamsdkexample.data.VideoItem;
 
 public interface PlayerConstract {
     interface View{
-        void onFileReady();
+        void onStreamerReady(boolean state);
 
         void isLoading(boolean isloading);
 
@@ -21,6 +21,6 @@ public interface PlayerConstract {
         void init();
         void prepare(FileSetup fileSetup);
         void destroy();
-
+        void setPlayer();
     }
 }

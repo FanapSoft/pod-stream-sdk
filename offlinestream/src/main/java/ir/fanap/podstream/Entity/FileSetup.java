@@ -1,10 +1,14 @@
 package ir.fanap.podstream.Entity;
 
 
-public class FileSetup {
+import android.util.Log;
+
+import ir.fanap.podstream.Util.Constants;
+import ir.fanap.podstream.network.response.AvoidObfuscate;
+
+public class FileSetup implements AvoidObfuscate{
 
     private final String baseUrl;
-    private final String clientId;
     private final String videoAddress;
     private final int quality;
     private final boolean mobile;
@@ -17,37 +21,40 @@ public class FileSetup {
 
     }
 
+    public String getVideoAddress() {
+        return videoAddress;
+    }
+
     public void setControlTopic(String controlTopic) {
         this.controlTopic = controlTopic;
     }
 
-    public String getUrl() {
+    public String getUrl(String clientId) {
         String url = baseUrl +
-                "?clientId=" + clientId +
-                "&vidoAdress=" + videoAddress +
+                "?token=" + clientId +
+                "&hashFile=" + videoAddress +
                 "&quality=" + quality +
                 "&mobile=" + mobile +
                 "&progressive=" + progressive+
-                "&streamTopic=" + streamTopic+
-                "&controlTopic=" + controlTopic;
-
+                "&consumTopic=" + streamTopic+
+                "&produceTopic=" + controlTopic;
+        Log.d("TAG", "getUrl: "+url);
         return url;
     }
 
     public FileSetup(Builder builder) {
 
         this.baseUrl = builder.baseUrl;
-        this.clientId = builder.clientId;
         this.videoAddress = builder.videoAddress;
         this.quality = builder.quality;
         this.mobile = builder.mobile;
         this.progressive = builder.progressive;
     }
 
-    public static class Builder {
+    public static class Builder implements AvoidObfuscate {
 
-        String baseUrl = "http://192.168.112.32:80/register/";
-        String clientId;
+        String baseUrl = Constants.End_Point_Register;
+//        String clientId;
         String videoAddress;
         int quality = 240;
         boolean mobile = true;
@@ -74,8 +81,8 @@ public class FileSetup {
         }
 
 
-        public FileSetup build(String clientId, String videoAddress) {
-            this.clientId = clientId;
+        public FileSetup build(String videoAddress) {
+//            this.clientId = clientId;
             this.videoAddress = videoAddress;
             return new FileSetup(this);
         }

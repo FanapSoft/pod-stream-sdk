@@ -8,11 +8,13 @@ import ir.fanap.podstreamsdkexample.data.VideoItem;
 public interface VideoListConstract {
     interface View{
         void onRecivedVideoList(List<VideoItem> response);
+        void onStreamerReady(boolean state);
     }
 
     interface Presenter{
-        void init();
+        void init(String token);
         void destroy();
         void getVideoList();
+
     }
 }

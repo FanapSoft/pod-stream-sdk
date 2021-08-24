@@ -5,10 +5,13 @@ import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.PlaybackException;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
@@ -20,9 +23,6 @@ import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.util.Date;
-
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.DataSources.FileDataSource;
@@ -30,7 +30,9 @@ import ir.fanap.podstream.DataSources.KafkaDataProvider;
 import ir.fanap.podstream.DataSources.ProgressiveDataSource;
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.R;
+import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.Util.LogTypes;
+import ir.fanap.podstream.Util.ssl.SSLHelper;
 import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
 import ir.fanap.podstream.network.response.DashResponse;
@@ -38,7 +40,7 @@ import ir.fanap.podstream.network.response.TopicResponse;
 
 public class PodStream implements KafkaDataProvider.Listener {
     public static String TAG = "PodStream";
-    private  CompositeDisposable mCompositeDisposable;
+    private CompositeDisposable mCompositeDisposable;
     private static PodStream instance;
     private Activity mContext;
     private Gson gson;
@@ -47,36 +49,50 @@ public class PodStream implements KafkaDataProvider.Listener {
     private StyledPlayerView playerView;
     private SimpleExoPlayer player;
     private AppApi api;
-
+    public String token = "193e8f07232546d6ac0d56784ff91c41";
 
     private boolean isReady = false;
     private ProgressiveDataSource.Factory dataSourceFactory;
     //    private FileDataSource.Factory dataSourceFactory;
     private MediaSource mediaSource;
     private KafkaDataProvider provider;
+    private SSLHelper sslHelper;
 
     private PodStream() {
 
     }
 
-    public synchronized static PodStream init(Activity activity) {
+    public synchronized static PodStream init(Activity activity, String token) {
 
         if (instance == null) {
             instance = new PodStream();
             instance.setContext(activity);
             instance.netWorkInit();
-            instance.initPlayer(activity);
-            instance.prepareTopic();
+            instance.setToken(token);
+            //  instance.initPlayer(activity);
+//            instance.prepareTopic();
         }
+
         return instance;
 
     }
 
-    public void setContext(Activity mContext) {
+    private void setContext(Activity mContext) {
         this.mContext = mContext;
+        sslHelper = new SSLHelper();
+        try {
+            sslHelper.generateFile(Constants.CERT_FILE, mContext);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private void initPlayer(Activity activity) {
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+
+    public void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
 //        builder.setAllocator(new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE));
 //        builder.setBufferDurationsMs(
@@ -90,48 +106,50 @@ public class PodStream implements KafkaDataProvider.Listener {
         playerView = activity.findViewById(R.id.player_view);
         playerView.setPlayer(player);
         player.setPlayWhenReady(true);
-        player.addListener(new ExoPlayer.EventListener() {
 
+        player.addListener(new Player.Listener() {
 
             @Override
-            public void onTimelineChanged(Timeline timeline, int reason) {
+            public void onTimelineChanged(@NonNull Timeline timeline, int reason) {
                 ShowLog(LogTypes.PLAYERSTATE, "onTimelineChanged");
             }
 
             @Override
-            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+            public void onTracksChanged(@NonNull TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
                 ShowLog(LogTypes.PLAYERSTATE, "onTracksChanged");
             }
 
-
             @Override
-            public void onIsLoadingChanged(boolean isLoading) {
+            public void onIsPlayingChanged(boolean isPlaying) {
                 ShowLog(LogTypes.PLAYERSTATE, "onIsLoadingChanged");
+
             }
 
-
             @Override
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                playerView.hideController();
-                if (playbackState == ExoPlayer.STATE_BUFFERING) {
-                    listener.onIsLoadingChanged(true);
-                } else {
-                    listener.onIsLoadingChanged(false);
-                }
+            public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+
             }
 
             @Override
             public void onPlaybackStateChanged(int state) {
+                playerView.hideController();
+                if (state == ExoPlayer.STATE_BUFFERING) {
+                    listener.onIsLoadingChanged(true);
+                } else {
+                    listener.onIsLoadingChanged(false);
+                }
                 ShowLog(LogTypes.PLAYERSTATE, "onPlaybackStateChanged" + state);
             }
 
+
             @Override
-            public void onPlayerError(ExoPlaybackException error) {
+            public void onPlayerError(@NonNull PlaybackException error) {
                 //Catch here, but app still crash on some errors!
-                ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.type);
+                ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.errorCode);
                 ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.getMessage());
             }
         });
+        Log.e(TAG, "initPlayer: ");
     }
 
     private void netWorkInit() {
@@ -140,15 +158,20 @@ public class PodStream implements KafkaDataProvider.Listener {
         mCompositeDisposable = new CompositeDisposable();
     }
 
-    private void prepareTopic() {
-        mCompositeDisposable.add(api.getTopics("http://192.168.112.32/getTopic/?clientId=7936886af8064418b01e97f57c377734")
+    public void prepareTopic() {
+        mCompositeDisposable.add(api.getTopics(Constants.End_Point_Topic + token)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(response -> {
+                            response.setsslPath(sslHelper.getCart().getAbsolutePath());
                             connectKafkaProvider(response);
-                            Log.e(TAG, "prepareTopic: ");
+                            Log.e(TAG, "get topic: ");
                         },
-                        throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
+                        throwable -> {
+                            Log.e(TAG, "can not get topic: ");
+                            ShowLog(LogTypes.ERROR, throwable.getMessage());
+                            ShowLog(LogTypes.ERROR, throwable.toString());
+                        }));
 
     }
 
@@ -162,7 +185,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void ShowLog(String logType, String message) {
         if (showLog)
             Log.e(TAG, logType + ": " + message);
-        listener.hasError(message);
+        if (listener != null)
+            listener.hasError(message);
     }
 
     public void setListener(StreamEventListener listener) {
@@ -170,21 +194,39 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     public void prepareStreaming(FileSetup file) {
-        if(isReady) {
-            file.setControlTopic(config.getControlTopic());
-            file.setStreamTopic(config.getStreamTopic());
-            api.getDashManifest(file.getUrl())
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .subscribe(response -> {
-                                fileReadyToPlay(response);
-                            },
-                            throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage()));
+
+        if (isReady) {
+            if (isCheck) {
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        provider.prepareDashFileForPlay(file.getVideoAddress(), token);
+                    }
+                });
+                t.start();
+            } else {
+                file.setControlTopic(config.getControlTopic());
+                file.setStreamTopic(config.getStreamTopic());
+                mCompositeDisposable.add(api.getDashManifest(file.getUrl(token))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(Schedulers.io())
+                        .subscribe(response -> {
+                                      fileReadyToPlay(response);
+                                    isCheck = true;
+                                    Log.e("TAG", "ready  to play" + response.getSize());
+                                },
+                                throwable -> {
+                                    ShowLog(LogTypes.ERROR, throwable.getMessage());
+                                    Log.e("TAG", "error on play " + throwable.toString());
+                                }));
+            }
         }
     }
 
-    public void fileReadyToPlay(DashResponse response) {
+    boolean isCheck = false;
 
+    private void fileReadyToPlay(DashResponse response) {
+//        Log.e("TAG", "start to get first: fileReadyToPlay" + response.toString(response));
         mContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -199,7 +241,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private ProgressiveDataSource.Factory buildDataSourceFactory(DashResponse response) {
-        return new ProgressiveDataSource.Factory(response,provider);
+        return new ProgressiveDataSource.Factory(response, provider);
     }
 
     private MediaSource buildMediaSource() {
@@ -216,7 +258,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         showLog = false;
     }
 
-    public void attachPlayer(DashResponse response) {
+    private void attachPlayer(DashResponse response) {
         if (isReady) {
             this.provider.startStreming(response);
             dataSourceFactory = buildDataSourceFactory(response);
@@ -232,23 +274,34 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     public void releasePlayer() {
-        if (dataSourceFactory != null) {
-            isReady = false;
-            mCompositeDisposable.dispose();
-            provider.release();
-            player.stop(true);
-            player = null;
+        try {
+            if (dataSourceFactory != null) {
+                mCompositeDisposable.dispose();
+                player.stop(true);
+                player = null;
+                Log.e(TAG, "releasePlayer: ");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "exeption: ");
         }
     }
 
     public void clean() {
         releasePlayer();
+        provider.release();
         instance = null;
+        isReady = false;
     }
 
     @Override
     public void onStreamerIsReady(boolean state) {
         isReady = state;
+        listener.onStreamerReady(state);
         Log.e(TAG, "onStreamerIsReady: " + state);
+    }
+
+    @Override
+    public void onFileReady(DashResponse dashFile) {
+        fileReadyToPlay(dashFile);
     }
 }

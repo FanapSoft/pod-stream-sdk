@@ -11,14 +11,15 @@ import ir.fanap.podstreamsdkexample.data.remote.Repository;
 public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventListener {
     PodStream offlinestreamer;
     PlayerConstract.View mView;
-    Context mContext;
+    Activity mContext;
     Repository repository;
 
     public PlayerPresenter(Activity context, PlayerConstract.View view) {
         repository = Repository.getInstance();
         mContext = context;
         mView = view;
-        offlinestreamer = PodStream.init(context);
+        offlinestreamer = repository.getOfflinestreamer();
+        offlinestreamer.initPlayer(mContext);
         init();
     }
 
@@ -32,9 +33,11 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventLi
         offlinestreamer.prepareStreaming(file);
     }
 
+
+
     @Override
-    public void onFileReady() {
-        mView.onFileReady();
+    public void onStreamerReady(boolean state) {
+        mView.onStreamerReady(state);
     }
 
     @Override
@@ -49,8 +52,11 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventLi
 
     @Override
     public void destroy() {
-        offlinestreamer.clean();
+        offlinestreamer.releasePlayer();
     }
 
-
+    @Override
+    public void setPlayer(){
+        repository.getOfflinestreamer().initPlayer(mContext);
+    }
 }
