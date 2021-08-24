@@ -2,6 +2,7 @@ package ir.fanap.podstreamsdkexample.ui.ListItem;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.offlineStream.PodStream;
@@ -54,11 +55,11 @@ public class VideoListPresenter implements VideoListConstract.Presenter, StreamE
 
     @Override
     public void onIsLoadingChanged(boolean isLoading) {
-
+        Log.d("test", "hasError: ");
     }
 
     @Override
     public void hasError(String error) {
-
+        Log.d("test", "hasError: ");
     }
 }

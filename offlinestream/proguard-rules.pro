@@ -1,21 +1,44 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-printconfiguration '/home/fanap_soft_26/Development/proguard-configuration.txt'
+-dontwarn kotlinx.atomicfu.**
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keep class ir.fanap.podstream.offlineStream.PodStream{*;}
+-keepclassmembers class ir.fanap.podstream.offlineStream.PodStream{*;}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-keep class * implements ir.fanap.podstream.network.response.AvoidObfuscate{*;}
+-keepclassmembers  class * implements ir.fanap.podstream.network.response.AvoidObfuscate$* { *; }
+
+-keep class * implements com.example.kafkassl.kafkaclient.ConsumResult{*;}
+-keepclassmembers  class com.example.kafkassl.kafkaclient.ConsumResult { *; }
+
+-keep class * implements com.example.kafkassl.kafkaclient.ConsumerClient{*;}
+-keepclassmembers  class com.example.kafkassl.kafkaclient.ConsumerClient { *; }
+
+-keep class * implements com.example.kafkassl.kafkaclient.ProducerClient{*;}
+-keepclassmembers  class com.example.kafkassl.kafkaclient.ProducerClient { *; }
+
+
+-keep class  com.google.android.exoplayer2.C{*;}
+-keepclassmembers  class com.google.android.exoplayer2.C { *; }
+
+-keep class  com.google.android.exoplayer2.upstream.BaseDataSource{*;}
+-keepclassmembers  class com.google.android.exoplayer2.upstream.BaseDataSource { *; }
+
+-keep class  com.google.android.exoplayer2.upstream.DataSource{*;}
+-keepclassmembers  class com.google.android.exoplayer2.upstream.DataSource { *; }
+
+-keep class   com.google.android.exoplayer2.upstream.TransferListener{*;}
+-keepclassmembers ,allowshrinking class  com.google.android.exoplayer2.upstream.TransferListener { *; }
+
+-keep class   com.google.android.exoplayer2.upstream.DataSpec{*;}
+-keepclassmembers  class com.google.android.exoplayer2.upstream.DataSpec { *; }
+
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+

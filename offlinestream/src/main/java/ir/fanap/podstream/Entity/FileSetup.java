@@ -1,9 +1,12 @@
 package ir.fanap.podstream.Entity;
 
 
-import ir.fanap.podstream.Util.Constants;
+import android.util.Log;
 
-public class FileSetup {
+import ir.fanap.podstream.Util.Constants;
+import ir.fanap.podstream.network.response.AvoidObfuscate;
+
+public class FileSetup implements AvoidObfuscate{
 
     private final String baseUrl;
     private final String videoAddress;
@@ -35,7 +38,7 @@ public class FileSetup {
                 "&progressive=" + progressive+
                 "&consumTopic=" + streamTopic+
                 "&produceTopic=" + controlTopic;
-
+        Log.d("TAG", "getUrl: "+url);
         return url;
     }
 
@@ -48,7 +51,7 @@ public class FileSetup {
         this.progressive = builder.progressive;
     }
 
-    public static class Builder {
+    public static class Builder implements AvoidObfuscate {
 
         String baseUrl = Constants.End_Point_Register;
 //        String clientId;

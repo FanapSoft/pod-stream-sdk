@@ -5,10 +5,13 @@ import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.PlaybackException;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
@@ -20,7 +23,6 @@ import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.DataSources.FileDataSource;
@@ -60,7 +62,7 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     }
 
-    public synchronized static PodStream init(Activity activity,String token) {
+    public synchronized static PodStream init(Activity activity, String token) {
 
         if (instance == null) {
             instance = new PodStream();
@@ -86,7 +88,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     public void setToken(String token) {
-       this.token = token;
+        this.token = token;
     }
 
 
@@ -104,45 +106,46 @@ public class PodStream implements KafkaDataProvider.Listener {
         playerView = activity.findViewById(R.id.player_view);
         playerView.setPlayer(player);
         player.setPlayWhenReady(true);
-        player.addListener(new ExoPlayer.EventListener() {
 
+        player.addListener(new Player.Listener() {
 
             @Override
-            public void onTimelineChanged(Timeline timeline, int reason) {
+            public void onTimelineChanged(@NonNull Timeline timeline, int reason) {
                 ShowLog(LogTypes.PLAYERSTATE, "onTimelineChanged");
             }
 
             @Override
-            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+            public void onTracksChanged(@NonNull TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
                 ShowLog(LogTypes.PLAYERSTATE, "onTracksChanged");
             }
 
-
             @Override
-            public void onIsLoadingChanged(boolean isLoading) {
+            public void onIsPlayingChanged(boolean isPlaying) {
                 ShowLog(LogTypes.PLAYERSTATE, "onIsLoadingChanged");
+
             }
 
-
             @Override
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                playerView.hideController();
-                if (playbackState == ExoPlayer.STATE_BUFFERING) {
-                    listener.onIsLoadingChanged(true);
-                } else {
-                    listener.onIsLoadingChanged(false);
-                }
+            public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+
             }
 
             @Override
             public void onPlaybackStateChanged(int state) {
+                playerView.hideController();
+                if (state == ExoPlayer.STATE_BUFFERING) {
+                    listener.onIsLoadingChanged(true);
+                } else {
+                    listener.onIsLoadingChanged(false);
+                }
                 ShowLog(LogTypes.PLAYERSTATE, "onPlaybackStateChanged" + state);
             }
 
+
             @Override
-            public void onPlayerError(ExoPlaybackException error) {
+            public void onPlayerError(@NonNull PlaybackException error) {
                 //Catch here, but app still crash on some errors!
-                ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.type);
+                ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.errorCode);
                 ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.getMessage());
             }
         });
@@ -167,6 +170,7 @@ public class PodStream implements KafkaDataProvider.Listener {
                         throwable -> {
                             Log.e(TAG, "can not get topic: ");
                             ShowLog(LogTypes.ERROR, throwable.getMessage());
+                            ShowLog(LogTypes.ERROR, throwable.toString());
                         }));
 
     }
@@ -190,6 +194,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     public void prepareStreaming(FileSetup file) {
+
         if (isReady) {
             if (isCheck) {
                 Thread t = new Thread(new Runnable() {
@@ -202,30 +207,26 @@ public class PodStream implements KafkaDataProvider.Listener {
             } else {
                 file.setControlTopic(config.getControlTopic());
                 file.setStreamTopic(config.getStreamTopic());
-                api.getDashManifest(file.getUrl(token))
+                mCompositeDisposable.add(api.getDashManifest(file.getUrl(token))
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
                         .subscribe(response -> {
-                                    fileReadyToPlay(response);
+                                      fileReadyToPlay(response);
                                     isCheck = true;
-                                    Log.e(TAG, "ready  ");
+                                    Log.e("TAG", "ready  to play" + response.getSize());
                                 },
                                 throwable -> {
                                     ShowLog(LogTypes.ERROR, throwable.getMessage());
-                                    Log.e(TAG, "error on play ");
-                                });
+                                    Log.e("TAG", "error on play " + throwable.toString());
+                                }));
             }
         }
-    }
-
-    void test() {
-
     }
 
     boolean isCheck = false;
 
     private void fileReadyToPlay(DashResponse response) {
-
+//        Log.e("TAG", "start to get first: fileReadyToPlay" + response.toString(response));
         mContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
