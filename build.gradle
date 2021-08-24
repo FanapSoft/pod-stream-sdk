@@ -20,6 +20,16 @@ allprojects {
         flatDir{
             dirs 'libs'
         }
+        maven {
+            name = "pod-stream-sdk"
+            url = uri("https://maven.pkg.github.com/FanapSoft/pod-stream-sdk")
+            credentials {
+                Properties properties = new Properties()
+                properties.load(project.rootProject.file('local.properties').newDataInputStream())
+                username = properties.getProperty('GITHUB_USER')
+                password = properties.getProperty('GITHUB_PERSONAL_ACCESS_TOKEN')
+            }
+        }
     }
 }
 subprojects {

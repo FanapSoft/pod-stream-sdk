@@ -2,26 +2,21 @@ plugins {
     id 'com.android.library'
     id 'com.kezong.fat-aar'
 }
-
-
 ext {
-    libraryVersion = '0.0.1'
+    libraryVersion = '1.0.1'
     ndkVersion = '21.3.6528147'
-
 }
-
+apply from: file('publish.gradle')
 
 android {
 
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
 
-
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
-
         versionName libraryVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -32,6 +27,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -39,11 +35,9 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             consumerProguardFile 'proguard-rules.pro'
-//            minifyEnabled true
         }
-
     }
 
     configurations.embed.transitive = true
