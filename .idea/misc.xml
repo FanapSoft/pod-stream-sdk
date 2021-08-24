@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="../../../../../../../layout/custom_preview.xml" value="0.2677083333333333" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/6036a469a2d6e3c938d8dd71f98e0ce6/jetified-offlinestreamer/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/8c89db60d2ff0e31fe4b23e71613da1f/jetified-offlinestreamer/res/layout/activity_exo_player.xml" value="0.10190217391304347" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/8c89db60d2ff0e31fe4b23e71613da1f/jetified-offlinestreamer/res/layout/control_play.xml" value="0.10190217391304347" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/c1738d76e4acc3fa4a147e7024d99411/jetified-offlinestreamer/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/c1738d76e4acc3fa4a147e7024d99411/jetified-offlinestreamer/res/layout/control_play.xml" value="0.15416666666666667" />
+        <entry key="app/src/main/res/layout/player_activity.xml" value="0.1" />
+        <entry key="offlinestream/src/main/res/layout/activity_exo_player.xml" value="0.1" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
