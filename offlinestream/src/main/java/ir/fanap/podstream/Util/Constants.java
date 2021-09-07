@@ -1,7 +1,7 @@
 package ir.fanap.podstream.Util;
 
 public class Constants {
-    public static int DefualtLengthValue = 250000;
+    public static int DefaultLengthValue = 250000;
     public static String CERT_FILE = "-----BEGIN CERTIFICATE-----\n" +
             "MIIECzCCAvOgAwIBAgIUFxZBfkldSmEc6BVxINLcFpAOzlcwDQYJKoZIhvcNAQEL\n" +
             "BQAwgZQxCzAJBgNVBAYTAklSMQ8wDQYDVQQIDAZQYXJkaXMxDzANBgNVBAcMBlRl\n" +
@@ -26,11 +26,4 @@ public class Constants {
             "2hyaUpPjBMH4jJofhmQH0ZiDLbvFUxjH8Xq5OI8NY0PjposRrBygFOGkyO2zRC8c\n" +
             "XyulS5Bdk+9mMzN+F3qh/oxhuoBHqZcLzFMZg1T/xQ==\n" +
             "-----END CERTIFICATE-----";
-    //String Base = "http://192.168.112.32:80/register/";
-    public static String End_Point_Base = "http://offline-stream.pod.ir:80/";
-    //7936886af8064418b01e97f57c377734
-    public static String End_Point_Register = End_Point_Base + "register/";
-    public static String End_Point_Topic = End_Point_Base + "getTopic/?clientId=";
-
-
 }

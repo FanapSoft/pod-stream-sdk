@@ -7,10 +7,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient  {
     private static Retrofit ourInstance;
 
-    public static Retrofit getInstance() {
+    public static Retrofit getInstance(String url) {
         if (ourInstance == null)
             ourInstance = new Retrofit.Builder()
-                    .baseUrl("http://192.168.112.32:80/register/")
+                    .baseUrl(url)
                     .addConverterFactory(GsonConverterFactory.create())
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .build();

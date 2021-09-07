@@ -201,7 +201,7 @@ public class KafkaDataProviderb {
     }
 
     public void updateBuffer(long offset, long length) {
-        if (length > Constants.DefualtLengthValue) {
+        if (length > Constants.DefaultLengthValue) {
             getData(offset, length);
         } else {
             if ((offset + length) > filmLength)
@@ -224,8 +224,8 @@ public class KafkaDataProviderb {
         offsetMainBuffer = offset;
         endOfMainBuffer = offset + (length - 1);
         boolean exit = false;
-        for (int i = 0; i < length; i += Constants.DefualtLengthValue) {
-            int newlength = Constants.DefualtLengthValue;
+        for (int i = 0; i < length; i += Constants.DefaultLengthValue) {
+            int newlength = Constants.DefaultLengthValue;
             if (i + newlength > length) {
                 newlength = (int) length - i;
                 exit = true;

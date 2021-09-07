@@ -6,15 +6,14 @@ import android.util.Log;
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.network.response.AvoidObfuscate;
 
-public class FileSetup implements AvoidObfuscate{
+public class FileSetup implements AvoidObfuscate {
 
-    private final String baseUrl;
     private final String videoAddress;
     private final int quality;
     private final boolean mobile;
     private final boolean progressive;
-    private  String streamTopic;
-    private  String controlTopic;
+    private String streamTopic;
+    private String controlTopic;
 
     public void setStreamTopic(String streamTopic) {
         this.streamTopic = streamTopic;
@@ -29,22 +28,20 @@ public class FileSetup implements AvoidObfuscate{
         this.controlTopic = controlTopic;
     }
 
-    public String getUrl(String clientId) {
-        String url = baseUrl +
+    public String getUrl(String serverurl, String clientId) {
+        String url = serverurl + "register/" +
                 "?token=" + clientId +
                 "&hashFile=" + videoAddress +
                 "&quality=" + quality +
                 "&mobile=" + mobile +
-                "&progressive=" + progressive+
-                "&consumTopic=" + streamTopic+
+                "&progressive=" + progressive +
+                "&consumTopic=" + streamTopic +
                 "&produceTopic=" + controlTopic;
-        Log.d("TAG", "getUrl: "+url);
+        Log.d("TAG", "getUrl: " + url);
         return url;
     }
 
     public FileSetup(Builder builder) {
-
-        this.baseUrl = builder.baseUrl;
         this.videoAddress = builder.videoAddress;
         this.quality = builder.quality;
         this.mobile = builder.mobile;
@@ -53,36 +50,12 @@ public class FileSetup implements AvoidObfuscate{
 
     public static class Builder implements AvoidObfuscate {
 
-        String baseUrl = Constants.End_Point_Register;
-//        String clientId;
-        String videoAddress;
-        int quality = 240;
-        boolean mobile = true;
-        boolean progressive = true;
-
-        public Builder deactiveProgressive() {
-            progressive = false;
-            return this;
-        }
-
-        public Builder deactiveMobile() {
-            mobile = false;
-            return this;
-        }
-
-        public Builder changeBaseUrl(String url) {
-            baseUrl = url;
-            return this;
-        }
-
-        public Builder changeQuality(int quality) {
-            this.quality = quality;
-            return this;
-        }
-
+        private String videoAddress;
+        private int quality = 240;
+        private boolean mobile = true;
+        private boolean progressive = true;
 
         public FileSetup build(String videoAddress) {
-//            this.clientId = clientId;
             this.videoAddress = videoAddress;
             return new FileSetup(this);
         }

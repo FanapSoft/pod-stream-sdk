@@ -20,8 +20,6 @@ public class TopicResponse implements Serializable,AvoidObfuscate{
     @SerializedName("brokerAddress")
     private String brokerAddress;
 
-    //private String brokerAddress = "192.168.112.32:9092";
-
 
     @Expose
     @SerializedName("size")
@@ -75,7 +73,6 @@ public class TopicResponse implements Serializable,AvoidObfuscate{
 
     public String getBrokerAddress() {
         return "188.75.65.122:9092,188.75.65.122:9093";
-//        return brokerAddress;
     }
 
     public void setBrokerAddress(String brokerAddress) {

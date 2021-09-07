@@ -1,24 +1,13 @@
 package ir.fanap.podstream.DataSources;
-
-import android.net.Uri;
-import android.text.TextUtils;
-import android.util.Log;
-
-
+import android.os.Build;
+import androidx.annotation.RequiresApi;
 import com.example.kafkassl.kafkaclient.ConsumResult;
 import com.example.kafkassl.kafkaclient.ConsumerClient;
 import com.example.kafkassl.kafkaclient.ProducerClient;
-import com.google.android.exoplayer2.util.Assertions;
-
-import java.io.FileNotFoundException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Properties;
-
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.Util.Utils;
-
-import ir.fanap.podstream.network.response.AvoidObfuscate;
 import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 
@@ -27,7 +16,6 @@ public class KafkaDataProvider {
         void onStreamerIsReady(boolean state);
         void onFileReady(DashResponse dashFile);
     }
-
     Listener listener;
     DashResponse dashFile;
     ConsumerClient consumerClient;
@@ -35,31 +23,26 @@ public class KafkaDataProvider {
     String consumTopic;
     String produceTopic;
     private byte[] mainBuffer;
-    private byte[] startBuffer;
     private long offsetMainBuffer;
     private long endOfMainBuffer;
     private long filmLength;
-
 
     public KafkaDataProvider(TopicResponse kafkaConfigs, Listener listener) {
         this.listener = listener;
         consumTopic = kafkaConfigs.getStreamTopic();
         produceTopic = kafkaConfigs.getControlTopic();
-
         final Properties propertiesProducer = Utils.getSslProperties(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath());
-
         producerClient = new ProducerClient(propertiesProducer);
         producerClient.connect();
-
         propertiesProducer.setProperty("group.id", "264");
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
         if (listener != null)
             listener.onStreamerIsReady(true);
-
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void prepareDashFileForPlay(String Hash, String Token) {
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(-5);
@@ -79,13 +62,11 @@ public class KafkaDataProvider {
     public void startStreming(DashResponse dashFile) {
         this.dashFile = dashFile;
         this.filmLength = dashFile.getSize();
-        startBuffer = null;
+        byte[] startBuffer = null;
         while (startBuffer == null || startBuffer.length < 250000) {
             startBuffer = this.consumerClient.consumingWithKey(100).getValue();
         }
     }
-
-
 
     public byte[] getDataBuffer() {
         return mainBuffer;
@@ -96,13 +77,12 @@ public class KafkaDataProvider {
     }
 
     public boolean shouldUpdateBuffer(long offset, long length) {
-        if (offset < endOfMainBuffer && offset >= offsetMainBuffer && (offset + length) <= endOfMainBuffer)
-            return false;
-        return true;
+        return offset >= endOfMainBuffer || offset < offsetMainBuffer || (offset + length) > endOfMainBuffer;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void updateBuffer(long offset, long length) {
-        if (length > Constants.DefualtLengthValue) {
+        if (length > Constants.DefaultLengthValue) {
             getData(offset, length);
         } else {
             if ((offset + length) > filmLength)
@@ -119,13 +99,14 @@ public class KafkaDataProvider {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void getData(long offset, long length) {
         mainBuffer = new byte[(int) length];
         offsetMainBuffer = offset;
         endOfMainBuffer = offset + (length - 1);
         boolean exit = false;
-        for (int i = 0; i < length; i += Constants.DefualtLengthValue) {
-            int newlength = Constants.DefualtLengthValue;
+        for (int i = 0; i < length; i += Constants.DefaultLengthValue) {
+            int newlength = Constants.DefaultLengthValue;
             if (i + newlength > length) {
                 newlength = (int) length - i;
                 exit = true;
@@ -144,10 +125,10 @@ public class KafkaDataProvider {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void release() {
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(-2);
         producerClient.produceMessege(buffers.array(), ",", produceTopic);
     }
-
 }
