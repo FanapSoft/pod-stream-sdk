@@ -1,11 +1,9 @@
 package ir.fanap.podstreamsdkexample.ui.ListItem;
 
 import android.app.Activity;
-import android.content.Context;
+import android.os.Build;
 import android.util.Log;
-
-import ir.fanap.podstream.Entity.FileSetup;
-import ir.fanap.podstream.offlineStream.PodStream;
+import androidx.annotation.RequiresApi;
 import ir.fanap.podstream.offlineStream.StreamEventListener;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
@@ -14,7 +12,6 @@ public class VideoListPresenter implements VideoListConstract.Presenter, StreamE
     VideoListConstract.View mView;
     Activity mContext;
     Repository repository;
-    String token;
 
     public VideoListPresenter(Activity context, VideoListConstract.View view) {
         mContext = context;
@@ -38,6 +35,7 @@ public class VideoListPresenter implements VideoListConstract.Presenter, StreamE
         repository.getOfflinestreamer().setListener(this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void destroy() {
         repository.getOfflinestreamer().clean();

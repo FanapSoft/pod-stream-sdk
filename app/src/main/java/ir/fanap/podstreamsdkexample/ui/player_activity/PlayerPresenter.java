@@ -1,8 +1,8 @@
 package ir.fanap.podstreamsdkexample.ui.player_activity;
 
 import android.app.Activity;
-import android.content.Context;
-
+import android.os.Build;
+import androidx.annotation.RequiresApi;
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.offlineStream.PodStream;
 import ir.fanap.podstream.offlineStream.StreamEventListener;
@@ -28,6 +28,7 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventLi
         offlinestreamer.setListener(this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void prepare(FileSetup file) {
         offlinestreamer.prepareStreaming(file);

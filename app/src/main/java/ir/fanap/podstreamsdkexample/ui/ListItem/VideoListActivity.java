@@ -24,7 +24,6 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
 
     RecyclerView recycler_medialist;
     TextView txt_state;
-
     VideoListConstract.Presenter presenter;
     VideoListAdaper videoListAdaper;
     String token = "ed24e37c7ee84313acf2805a80122f94";

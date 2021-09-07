@@ -15,6 +15,5 @@ public interface VideoListConstract {
         void init(String token);
         void destroy();
         void getVideoList();
-
     }
 }

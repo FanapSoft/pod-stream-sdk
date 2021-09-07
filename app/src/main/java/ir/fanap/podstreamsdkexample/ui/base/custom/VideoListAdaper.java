@@ -5,16 +5,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.podstreamsdkexample.R;
-
 import java.util.List;
-
 import ir.fanap.podstreamsdkexample.data.VideoItem;
-
 public class VideoListAdaper extends RecyclerView.Adapter<VideoListAdaper.ViewHolder> {
 
     ItemClickListener mClickListener;
@@ -48,11 +43,9 @@ public class VideoListAdaper extends RecyclerView.Adapter<VideoListAdaper.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-
         holder.txt_hashcode.setText(getItem(position).getVideoHash());
         holder.txt_name.setText(getItem(position).getVideoName());
         holder.txt_quality.setText(getItem(position).getVideoQuality());
-
     }
 
     @Override
@@ -60,13 +53,10 @@ public class VideoListAdaper extends RecyclerView.Adapter<VideoListAdaper.ViewHo
         return dataList.size();
     }
 
-
     public class ViewHolder extends RecyclerView.ViewHolder {
-
         TextView txt_name;
         TextView txt_quality;
         TextView txt_hashcode;
-
         ViewHolder(View itemView) {
             super(itemView);
             txt_name = itemView.findViewById(R.id.txt_name);
@@ -87,8 +77,6 @@ public class VideoListAdaper extends RecyclerView.Adapter<VideoListAdaper.ViewHo
 
     }
 
-
-    // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
         void onItemClick(VideoItem item);
     }

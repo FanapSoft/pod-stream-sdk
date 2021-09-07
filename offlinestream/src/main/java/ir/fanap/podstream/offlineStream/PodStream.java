@@ -2,8 +2,11 @@ package ir.fanap.podstream.offlineStream;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -164,6 +167,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         this.listener = listener;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void prepareStreaming(FileSetup file) {
         if (isReady) {
             if (isCheck) {
@@ -238,6 +242,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void clean() {
         releasePlayer();
         provider.release();
