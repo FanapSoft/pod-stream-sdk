@@ -53,18 +53,17 @@ android {
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.3.1'
-    embed(name: 'kafkaAdapter', ext: 'aar')
+    implementation(name: 'kafkaAdapter', ext: 'aar')
             {
                 exclude group: 'androidx.customview', module: 'customview'
                 transitive = true
             }
-    embed('com.google.android.exoplayer:exoplayer-core:2.15.0')
+    implementation('com.google.android.exoplayer:exoplayer-core:2.15.0')
             {
                 exclude group: 'androidx.annotation', module: 'annotation'
                 transitive = true
             }
-    embed('com.google.android.exoplayer:exoplayer-ui:2.15.0')
-            {
+    implementation('com.google.android.exoplayer:exoplayer-ui:2.15.0') {
                 exclude group: 'androidx.annotation', module: 'annotation'
                 exclude group: 'androidx.core', module: 'core'
                 exclude group: 'androidx.customview', module: 'customview'
@@ -75,9 +74,9 @@ dependencies {
             }
 
     //Retrofit
-    embed('com.squareup.retrofit2:adapter-rxjava2:2.9.0')
+    implementation('com.squareup.retrofit2:adapter-rxjava2:2.9.0')
             { transitive = true }
-    embed('com.squareup.retrofit2:converter-gson:2.8.1')
+    implementation('com.squareup.retrofit2:converter-gson:2.8.1')
             { transitive = true }
 
 

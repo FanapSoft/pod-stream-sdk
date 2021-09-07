@@ -10,6 +10,7 @@
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/c1738d76e4acc3fa4a147e7024d99411/jetified-offlinestreamer/res/layout/activity_exo_player.xml" value="0.1" />
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/c1738d76e4acc3fa4a147e7024d99411/jetified-offlinestreamer/res/layout/control_play.xml" value="0.15416666666666667" />
         <entry key="app/src/main/res/layout/player_activity.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/video_list_activity.xml" value="0.5" />
         <entry key="offlinestream/src/main/res/layout/activity_exo_player.xml" value="0.1" />
       </map>
     </option>
@@ -19,5 +20,12 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.5" />
+      </ProjectState>
+    </option>
   </component>
 </project>

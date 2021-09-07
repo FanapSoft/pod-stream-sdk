@@ -23,14 +23,11 @@ import ir.fanap.podstreamsdkexample.ui.player_activity.PlayerActivity;
 public class VideoListActivity extends AppCompatActivity implements VideoListConstract.View {
 
     RecyclerView recycler_medialist;
-    Button btn_settoken;
-    EditText token_input;
     TextView txt_state;
 
     VideoListConstract.Presenter presenter;
     VideoListAdaper videoListAdaper;
     String token = "ed24e37c7ee84313acf2805a80122f94";
-//    String token = "9b4139be20e845048b7f7db8e59e9bb7";
     boolean start = true;
 
     @Override
@@ -42,18 +39,8 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
 
     private void initviews() {
         recycler_medialist = findViewById(R.id.recycler_medialist);
-        token_input = findViewById(R.id.token_input);
-        btn_settoken = findViewById(R.id.btn_settoken);
         txt_state = findViewById(R.id.txt_state);
         recycler_medialist.setLayoutManager(new LinearLayoutManager(this));
-        token_input.setText(token);
-        btn_settoken.setOnClickListener(view -> {
-            if (!token_input.getText().toString().equals("null")) {
-                token = token_input.getText().toString();
-                presenter.init(token);
-            } else
-                Toast.makeText(this, "please input a token", Toast.LENGTH_SHORT).show();
-        });
     }
 
     public void init() {
@@ -63,6 +50,7 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
         videoListAdaper.setmClickListener(this::onItemClick);
         recycler_medialist.setAdapter(videoListAdaper);
         presenter.getVideoList();
+        presenter.init(token);
     }
 
     @Override
