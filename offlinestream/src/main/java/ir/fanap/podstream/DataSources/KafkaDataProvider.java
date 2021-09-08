@@ -31,13 +31,19 @@ public class KafkaDataProvider {
         this.listener = listener;
         consumTopic = kafkaConfigs.getStreamTopic();
         produceTopic = kafkaConfigs.getControlTopic();
-        final Properties propertiesProducer = Utils.getSslProperties(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath());
+      //  final Properties propertiesProducer = Utils.getSslProperties(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath());
+        final Properties propertiesProducer = new Properties();
+        propertiesProducer.setProperty("bootstrap.servers", kafkaConfigs.getBrokerAddress());
         producerClient = new ProducerClient(propertiesProducer);
         producerClient.connect();
-        propertiesProducer.setProperty("group.id", "264");
+        propertiesProducer.setProperty("group.id", String.valueOf(System.currentTimeMillis()));
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
+
+        producerClient.produceMessege("salam".getBytes(),"test","test");
+        producerClient.produceMessege("salam".getBytes(),"test","test");
+        producerClient.produceMessege("salam".getBytes(),"test","test");
         if (listener != null)
             listener.onStreamerIsReady(true);
     }

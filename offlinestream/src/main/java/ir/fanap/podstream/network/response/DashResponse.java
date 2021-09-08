@@ -1,5 +1,6 @@
 package ir.fanap.podstream.network.response;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -41,5 +42,9 @@ public class DashResponse implements Serializable,AvoidObfuscate {
 
     public void setSize(long size) {
         this.size = size;
+    }
+
+    public String toString(){
+       return new Gson().toJson(this);
     }
 }

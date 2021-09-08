@@ -28,16 +28,16 @@ public class Repository {
     }
 
     public List<VideoItem> getVideo() {
-        // String[] localServerHashList =  {"ZHBEOWS9PM2188E"}
+         String[] localServerHashList =  {"YPAL2RJJWN7VCBUL","PLJC5LDWU3BC9PMU"};
         // String[] sandBoxServerHashList =  {"ZHBEOWS9PM2188E"}
-        String[] mainServerHashList = {"5DLLXYSGNB7OQCRC", "DMTBQD6X2U3AZIG1", "6FVVFGQEPY4ZSF36", "9OIACUOZ8PYO46YK", "ABYALWPAE1ZDO4BR"};
+//        String[] mainServerHashList = {"5DLLXYSGNB7OQCRC", "DMTBQD6X2U3AZIG1", "6FVVFGQEPY4ZSF36", "9OIACUOZ8PYO46YK", "ABYALWPAE1ZDO4BR"};
 
         List<VideoItem> items = new ArrayList<>();
         String[] names = {"video1", "video2", "test3", "video2", "test3"};
         String[] quality = {"320", "320", "320", "320", "320"};
-        for (int i = 0; i < mainServerHashList.length; i++) {
+        for (int i = 0; i < localServerHashList.length; i++) {
             VideoItem item = new VideoItem();
-            item.setVideoHash(mainServerHashList[i]);
+            item.setVideoHash(localServerHashList[i]);
             item.setVideoName(names[i]);
             item.setVideoQuality(quality[i]);
             items.add(item);

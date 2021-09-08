@@ -65,10 +65,8 @@ public class TopicResponse implements Serializable,AvoidObfuscate{
         return size;
     }
 
-    public String toString(TopicResponse response) {
-        Gson gson = new Gson();
-        String json = gson.toJson(response);
-        return json;
+    public String toString() {
+        return  new Gson().toJson(this);
     }
 
     public String getBrokerAddress() {
