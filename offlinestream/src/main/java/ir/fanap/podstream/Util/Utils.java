@@ -34,12 +34,12 @@ public class Utils {
 
         final Properties propertiesProducer = new Properties();
         propertiesProducer.setProperty("bootstrap.servers", brockerAddress);
-        propertiesProducer.setProperty("security.protocol", "SASL_SSL");
-        propertiesProducer.setProperty("sasl.mechanisms", "PLAIN");
-        propertiesProducer.setProperty("sasl.username", "rrrr");
-        propertiesProducer.setProperty("sasl.password", "rrrr");
-        propertiesProducer.setProperty("ssl.ca.location", sslPath);
-        propertiesProducer.setProperty("ssl.key.password", "masoud68");
+//        propertiesProducer.setProperty("security.protocol", "SASL_SSL");
+//        propertiesProducer.setProperty("sasl.mechanisms", "PLAIN");
+//        propertiesProducer.setProperty("sasl.username", "rrrr");
+//        propertiesProducer.setProperty("sasl.password", "rrrr");
+//        propertiesProducer.setProperty("ssl.ca.location", sslPath);
+//        propertiesProducer.setProperty("ssl.key.password", "masoud68");
 
         return propertiesProducer;
     }
