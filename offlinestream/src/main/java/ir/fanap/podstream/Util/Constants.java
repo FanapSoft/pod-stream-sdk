@@ -34,8 +34,8 @@ public class Constants {
     public final static int StreamerError = 17;
 
     //streamer time out
-    public final static int DefaultTimeOut = 5000;
-    public final static int StartStreamTimeOut = 15000;
-    public final static int PrepareFileTimeOut = 15000;
-    public final static int MaxStremerTimeOut = 30000;
+    public final static int DefaultTimeOut = 20000;
+    public final static int StartStreamTimeOut = 20000;
+    public final static int PrepareFileTimeOut = 20000;
+    public final static int MaxStremerTimeOut = 20000;
 }

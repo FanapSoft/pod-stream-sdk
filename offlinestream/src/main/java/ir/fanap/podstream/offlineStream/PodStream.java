@@ -48,7 +48,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     private static PodStream instance;
     private Activity mContext;
     private StreamHandler.StreamEventListener listener;
-    private boolean showLog = true;
+    private boolean showLog = false;
     private StyledPlayerView playerView;
     private SimpleExoPlayer player;
     private AppApi api;
