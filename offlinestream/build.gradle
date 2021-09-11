@@ -3,7 +3,7 @@ plugins {
     id 'com.kezong.fat-aar'
 }
 ext {
-    libraryVersion = '1.0.5'
+    libraryVersion = '1.0.8'
     ndkVersion = '21.3.6528147'
 }
 apply from: file('publish.gradle')
@@ -23,7 +23,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -35,7 +35,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             consumerProguardFile 'proguard-rules.pro'
         }
     }

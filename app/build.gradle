@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
 }
 ext {
-    SdkVersion = "1.0.5"
+    SdkVersion = "1.0.8"
 }
 android {
     compileSdkVersion 30

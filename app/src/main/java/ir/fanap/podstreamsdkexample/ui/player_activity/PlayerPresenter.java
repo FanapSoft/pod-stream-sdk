@@ -5,10 +5,10 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.offlineStream.PodStream;
-import ir.fanap.podstream.offlineStream.StreamEventListener;
+import ir.fanap.podstream.offlineStream.StreamHandler;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
-public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventListener {
+public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler.StreamEventListener {
     PodStream offlinestreamer;
     PlayerConstract.View mView;
     Activity mContext;
@@ -47,7 +47,7 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamEventLi
     }
 
     @Override
-    public void hasError(String error) {
+    public void hasError(String error, int errorCode) {
         mView.hasError(error);
     }
 

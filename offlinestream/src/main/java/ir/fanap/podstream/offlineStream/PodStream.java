@@ -1,9 +1,11 @@
 package ir.fanap.podstream.offlineStream;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
@@ -21,6 +23,7 @@ import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.util.MimeTypes;
+
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.DataSources.FileDataSource;
@@ -38,17 +41,13 @@ import ir.fanap.podstream.network.response.TopicResponse;
 
 public class PodStream implements KafkaDataProvider.Listener {
 
-    public void test(){
-        Log.e(TAG, "test: 123456789" );
-    }
-
     public static String TAG = "PodStream";
     private CompositeDisposable mCompositeDisposable;
-    
+
     @SuppressLint("StaticFieldLeak")
     private static PodStream instance;
     private Activity mContext;
-    private StreamEventListener listener;
+    private StreamHandler.StreamEventListener listener;
     private boolean showLog = true;
     private StyledPlayerView playerView;
     private SimpleExoPlayer player;
@@ -60,6 +59,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     private SSLHelper sslHelper;
     private String End_Point_Base;
     boolean isCheck = false;
+
     private PodStream() {
 
     }
@@ -85,7 +85,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
-    private void setServer(Activity mContext){
+    private void setServer(Activity mContext) {
         End_Point_Base = mContext.getString(R.string.mainserver);
     }
 
@@ -126,11 +126,10 @@ public class PodStream implements KafkaDataProvider.Listener {
 
             @Override
             public void onPlayerError(@NonNull PlaybackException error) {
-                ShowLog(LogTypes.PLAYERERROR, "onPlayerError" +error.errorCode+" "+ error.getMessage());
+                ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.errorCode + " " + error.getMessage());
             }
         });
     }
-
 
 
     private void netWorkInit(Activity activity) {
@@ -138,8 +137,8 @@ public class PodStream implements KafkaDataProvider.Listener {
         mCompositeDisposable = new CompositeDisposable();
     }
 
-    private String getTopicUrl(){
-       return End_Point_Base + "getTopic/?clientId=" + token;
+    private String getTopicUrl() {
+        return End_Point_Base + "getTopic/?clientId=" + token;
     }
 
     public void prepareTopic() {
@@ -151,8 +150,10 @@ public class PodStream implements KafkaDataProvider.Listener {
                             connectKafkaProvider(response);
                         },
                         throwable -> {
+
                             ShowLog(LogTypes.ERROR, throwable.getMessage());
                             ShowLog(LogTypes.ERROR, throwable.toString());
+                            errorHandle(Constants.TopicResponseErrorCode, throwable.getMessage());
                         }));
 
     }
@@ -167,11 +168,14 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void ShowLog(String logType, String message) {
         if (showLog)
             Log.e(TAG, logType + ": " + message);
-        if (listener != null)
-            listener.hasError(message);
     }
 
-    public void setListener(StreamEventListener listener) {
+    private void errorHandle(int errorCode, String ErrorMesssage) {
+        if (listener != null)
+            listener.hasError(ErrorMesssage, errorCode);
+    }
+
+    public void setListener(StreamHandler.StreamEventListener listener) {
         this.listener = listener;
     }
 
@@ -184,18 +188,20 @@ public class PodStream implements KafkaDataProvider.Listener {
             } else {
                 file.setControlTopic(config.getControlTopic());
                 file.setStreamTopic(config.getStreamTopic());
-                mCompositeDisposable.add(api.getDashManifest(file.getUrl(End_Point_Base,token))
+                mCompositeDisposable.add(api.getDashManifest(file.getUrl(End_Point_Base, token))
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
                         .subscribe(response -> {
-                                      fileReadyToPlay(response);
+                                    fileReadyToPlay(response);
                                     isCheck = true;
                                 },
-                                throwable -> ShowLog(LogTypes.ERROR, throwable.getMessage())));
+                                throwable -> {
+                                    ShowLog(LogTypes.ERROR, throwable.getMessage());
+                                    errorHandle(Constants.StreamerResponseErrorCode, throwable.getMessage());
+                                }));
             }
         }
     }
-
 
 
     private void fileReadyToPlay(DashResponse response) {
@@ -234,7 +240,7 @@ public class PodStream implements KafkaDataProvider.Listener {
                 player.play();
             }
         } else {
-            ShowLog("player","Not Ready");
+            ShowLog("player", "Not Ready");
         }
     }
 
@@ -246,7 +252,7 @@ public class PodStream implements KafkaDataProvider.Listener {
                 player = null;
             }
         } catch (Exception e) {
-            ShowLog("player","Player released");
+            ShowLog("player", "Player released");
         }
     }
 
@@ -267,5 +273,15 @@ public class PodStream implements KafkaDataProvider.Listener {
     @Override
     public void onFileReady(DashResponse dashFile) {
         fileReadyToPlay(dashFile);
+    }
+
+    @Override
+    public void onTimeOut() {
+        errorHandle(Constants.TimeOutStreamer, "StreamerTimeOut");
+    }
+
+    @Override
+    public void onError(String message) {
+        errorHandle(Constants.StreamerError, message);
     }
 }

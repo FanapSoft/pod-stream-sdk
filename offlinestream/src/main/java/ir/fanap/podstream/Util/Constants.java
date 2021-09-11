@@ -26,4 +26,16 @@ public class Constants {
             "2hyaUpPjBMH4jJofhmQH0ZiDLbvFUxjH8Xq5OI8NY0PjposRrBygFOGkyO2zRC8c\n" +
             "XyulS5Bdk+9mMzN+F3qh/oxhuoBHqZcLzFMZg1T/xQ==\n" +
             "-----END CERTIFICATE-----";
+
+
+    public final static int TopicResponseErrorCode = 15;
+    public final static int StreamerResponseErrorCode = 16;
+    public final static int TimeOutStreamer = 17;
+    public final static int StreamerError = 17;
+
+    //streamer time out
+    public final static int DefaultTimeOut = 5000;
+    public final static int StartStreamTimeOut = 15000;
+    public final static int PrepareFileTimeOut = 15000;
+    public final static int MaxStremerTimeOut = 30000;
 }

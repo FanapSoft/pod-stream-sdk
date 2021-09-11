@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.os.Build;
 import android.util.Log;
 import androidx.annotation.RequiresApi;
-import ir.fanap.podstream.offlineStream.StreamEventListener;
+import ir.fanap.podstream.offlineStream.StreamHandler;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
-public class VideoListPresenter implements VideoListConstract.Presenter, StreamEventListener {
+public class VideoListPresenter implements VideoListConstract.Presenter, StreamHandler.StreamEventListener {
 
     VideoListConstract.View mView;
     Activity mContext;
@@ -57,7 +57,7 @@ public class VideoListPresenter implements VideoListConstract.Presenter, StreamE
     }
 
     @Override
-    public void hasError(String error) {
+    public void  hasError(String error, int errorCode)  {
         Log.d("test", "hasError: ");
     }
 }
