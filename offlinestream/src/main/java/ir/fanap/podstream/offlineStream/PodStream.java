@@ -37,6 +37,11 @@ import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 
 public class PodStream implements KafkaDataProvider.Listener {
+
+    public void test(){
+        Log.e(TAG, "test: 123456789" );
+    }
+
     public static String TAG = "PodStream";
     private CompositeDisposable mCompositeDisposable;
     
@@ -54,6 +59,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     private KafkaDataProvider provider;
     private SSLHelper sslHelper;
     private String End_Point_Base;
+    boolean isCheck = false;
     private PodStream() {
 
     }
@@ -125,6 +131,8 @@ public class PodStream implements KafkaDataProvider.Listener {
         });
     }
 
+
+
     private void netWorkInit(Activity activity) {
         api = RetrofitClient.getInstance(activity.getString(R.string.mainserver)).create(AppApi.class);
         mCompositeDisposable = new CompositeDisposable();
@@ -188,7 +196,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
-    boolean isCheck = false;
+
 
     private void fileReadyToPlay(DashResponse response) {
         mContext.runOnUiThread(() -> attachPlayer(response));

@@ -30,7 +30,7 @@ public class Repository {
     public List<VideoItem> getVideo() {
         // String[] localServerHashList =  {"ZHBEOWS9PM2188E"}
         // String[] sandBoxServerHashList =  {"ZHBEOWS9PM2188E"}
-        String[] mainServerHashList = {"5DLLXYSGNB7OQCRC", "DMTBQD6X2U3AZIG1", "6FVVFGQEPY4ZSF36", "9OIACUOZ8PYO46YK", "ABYALWPAE1ZDO4BR"};
+        String[] mainServerHashList = {"5DLLXYSGNB7OQCRC", "DMTBQD6X2U3AZIG1", "6FVVFGQEPY4ZSF36", "ABYALWPAE1ZDO4BR"};
 
         List<VideoItem> items = new ArrayList<>();
         String[] names = {"video1", "video2", "test3", "video2", "test3"};

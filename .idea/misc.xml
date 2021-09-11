@@ -4,14 +4,27 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="../../../../../../../layout/custom_preview.xml" value="0.2677083333333333" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/01fcedd9a9527760ce37141bc3931404/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/01fdb68562b05653fb582320f2e23459/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/0eee0d77843bc1e7d1294887fc0507e2/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/1343fe9da96b622034e7f41559e1e405/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/13b0fcd72645527bbd794eb85dfb09f6/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/1e86d0de6e0e1adbdd7b5f8f342a37a5/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/2938c03b3d3e820961792112610f7850/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/6036a469a2d6e3c938d8dd71f98e0ce6/jetified-offlinestreamer/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/6c7c0ac27a4304f17805784673e8004e/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/7f8d9e75a9aaae5da46336a6f557bcd8/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/8c89db60d2ff0e31fe4b23e71613da1f/jetified-offlinestreamer/res/layout/activity_exo_player.xml" value="0.10190217391304347" />
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/8c89db60d2ff0e31fe4b23e71613da1f/jetified-offlinestreamer/res/layout/control_play.xml" value="0.10190217391304347" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/9eeae295e162d3d2e8480676bfdc296d/jetified-offlinestream-release/res/layout/activity_exo_player.xml" value="0.1" />
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/c1738d76e4acc3fa4a147e7024d99411/jetified-offlinestreamer/res/layout/activity_exo_player.xml" value="0.1" />
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/c1738d76e4acc3fa4a147e7024d99411/jetified-offlinestreamer/res/layout/control_play.xml" value="0.15416666666666667" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/ec4cbaeec8851a60939a9122fc1af5fa/jetified-offlinestreamsdk-1.0.2/res/layout/activity_exo_player.xml" value="0.12916246215943492" />
+        <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/fc3540106d6fdf28420357ffd4b8d9cc/jetified-offlinestreamsdk-1.0.4/res/layout/activity_exo_player.xml" value="0.11175580221997981" />
         <entry key="app/src/main/res/layout/player_activity.xml" value="0.1" />
         <entry key="app/src/main/res/layout/video_list_activity.xml" value="0.5" />
         <entry key="offlinestream/src/main/res/layout/activity_exo_player.xml" value="0.1" />
+        <entry key="offlinestream/src/main/res/layout/control_play.xml" value="0.1" />
       </map>
     </option>
   </component>

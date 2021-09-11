@@ -16,3 +16,4 @@
 .cxx
 local.properties
 /.idea/misc.xml
+/app/libs/offlinestream-release.aar
