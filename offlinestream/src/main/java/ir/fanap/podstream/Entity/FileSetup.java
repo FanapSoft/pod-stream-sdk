@@ -37,7 +37,6 @@ public class FileSetup implements AvoidObfuscate {
                 "&progressive=" + progressive +
                 "&consumTopic=" + streamTopic +
                 "&produceTopic=" + controlTopic;
-        Log.d("TAG", "getUrl: " + url);
         return url;
     }
 

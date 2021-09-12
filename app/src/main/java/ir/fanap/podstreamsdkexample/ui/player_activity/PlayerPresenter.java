@@ -2,7 +2,9 @@ package ir.fanap.podstreamsdkexample.ui.player_activity;
 
 import android.app.Activity;
 import android.os.Build;
+
 import androidx.annotation.RequiresApi;
+
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.offlineStream.PodStream;
 import ir.fanap.podstream.offlineStream.StreamHandler;
@@ -35,7 +37,6 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
     }
 
 
-
     @Override
     public void onStreamerReady(boolean state) {
         mView.onStreamerReady(state);
@@ -46,9 +47,20 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
         mView.isLoading(isLoading);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void hasError(String error, int errorCode) {
         mView.hasError(error);
+        if (errorCode == 17) {
+            mView.timeOutHappend();
+            repository.getOfflinestreamer().clean();
+            repository.getOfflinestreamer().prepareTopic();
+        }
+        else if (errorCode == 18) {
+            mView.onPlayerError();
+            repository.getOfflinestreamer().clean();
+            repository.getOfflinestreamer().prepareTopic();
+        }
     }
 
     @Override
@@ -57,7 +69,7 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
     }
 
     @Override
-    public void setPlayer(){
+    public void setPlayer() {
         repository.getOfflinestreamer().initPlayer(mContext);
     }
 }

@@ -12,6 +12,8 @@ public interface PlayerConstract {
         void isLoading(boolean isloading);
 
         void hasError(String error);
+        void timeOutHappend();
+        void onPlayerError();
 
 
 

@@ -31,11 +31,11 @@ public class Constants {
     public final static int TopicResponseErrorCode = 15;
     public final static int StreamerResponseErrorCode = 16;
     public final static int TimeOutStreamer = 17;
-    public final static int StreamerError = 17;
+    public final static int StreamerError = 18;
 
     //streamer time out
-    public final static int DefaultTimeOut = 20000;
-    public final static int StartStreamTimeOut = 20000;
-    public final static int PrepareFileTimeOut = 20000;
-    public final static int MaxStremerTimeOut = 20000;
+    public final static int DefaultTimeOut = 60000;
+    public final static int StartStreamTimeOut = 60000;
+    public final static int PrepareFileTimeOut = 60000;
+    public final static int MaxStremerTimeOut = 60000;
 }

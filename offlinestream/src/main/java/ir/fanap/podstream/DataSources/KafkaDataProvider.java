@@ -100,7 +100,6 @@ public class KafkaDataProvider {
             if (isTimeOut)
                 break;
         }
-
         cancelTimeOutSchedule(timeOutObg);
     }
 
@@ -158,7 +157,7 @@ public class KafkaDataProvider {
 
     private void cancelTimeOutSchedule(@NotNull Object tid) {
         responseTime = System.currentTimeMillis() - start;
-        Log.e(PodStream.TAG, "response time = " + responseTime + " miliseconds ===>" + responseTime / 1000 + "seconds");
+//        Log.e(PodStream.TAG, "response time = " + responseTime + " miliseconds ===>" + responseTime / 1000 + "seconds");
         Log.e(PodStream.TAG, "pong !");
         TimeOutUtils.clearTimeout(tid);
         timeOutObg = null;
