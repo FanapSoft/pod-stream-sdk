@@ -7,7 +7,7 @@ import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
+
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -43,9 +43,9 @@ import ir.fanap.podstream.network.response.TopicResponse;
 public class PodStream implements KafkaDataProvider.Listener {
     public static String TAG = "PodStream";
     private CompositeDisposable mCompositeDisposable;
-
     @SuppressLint("StaticFieldLeak")
     private static PodStream instance;
+    private  TopicResponse config;
     private Activity mContext;
     private StreamEventListener listener;
     private boolean showLog = true;
@@ -114,7 +114,6 @@ public class PodStream implements KafkaDataProvider.Listener {
             @Override
             public void onIsPlayingChanged(boolean isPlaying) {
                 ShowLog(LogTypes.PLAYERSTATE, "onIsLoadingChanged");
-
             }
 
             @Override
@@ -156,8 +155,6 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     }
 
-    private static TopicResponse config;
-
     private void connectKafkaProvider(TopicResponse kafkaConfigs) {
         config = kafkaConfigs;
         provider = new KafkaDataProvider(kafkaConfigs, this);
@@ -174,7 +171,6 @@ public class PodStream implements KafkaDataProvider.Listener {
         this.listener = listener;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void prepareStreaming(FileSetup file) {
         if (isReady) {
             if (isCheck) {
@@ -202,7 +198,6 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void fileReadyToPlay(DashResponse response) {
         mContext.runOnUiThread(() -> attachPlayer(response));
     }
-
 
     private FileDataSource.Factory buildDataSourceFactory() {
         return new FileDataSource.Factory();
@@ -251,7 +246,6 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void clean() {
         releasePlayer();
         provider.release();
