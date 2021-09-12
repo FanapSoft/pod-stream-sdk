@@ -61,7 +61,7 @@ public class KafkaDataProvider {
         cancelTimeOutSchedule(timeOutObg);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+
     public void prepareDashFileForPlay(String Hash, String Token) {
         timeOutObg = startTimeOutSchedule(Constants.DefaultTimeOut);
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
@@ -112,7 +112,6 @@ public class KafkaDataProvider {
     boolean isTimeOut = false;
     Object timeOutObg = null;
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void updateBuffer(long offset, long length) {
         if (length > Constants.DefaultLengthValue) {
             getData(offset, length);
@@ -157,7 +156,6 @@ public class KafkaDataProvider {
         timeOutObg = null;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void getData(long offset, long length) {
         timeOutObg = startTimeOutSchedule(Constants.MaxStremerTimeOut);
         mainBuffer = new byte[(int) length];
@@ -187,7 +185,7 @@ public class KafkaDataProvider {
         cancelTimeOutSchedule(timeOutObg);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+
     public void release() {
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(-2);
