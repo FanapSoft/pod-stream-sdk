@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -17,6 +18,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     ConstraintLayout player_la;
     PlayerConstract.Presenter presenter;
     ProgressBar progressBar;
+    TextView tvError;
     String selectedHash = "";
 
     @Override
@@ -30,6 +32,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         selectedHash = getIntent().getStringExtra("hash");
         player_la = findViewById(R.id.player_la);
         progressBar = findViewById(R.id.progressBar);
+        tvError = findViewById(R.id.tvError);
     }
 
     public void init() {
@@ -79,6 +82,25 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
             @Override
             public void run() {
                 //  ext_error.append(error + "------\n");
+            }
+        });
+    }
+
+    @Override
+    public void timeOutHappend() {
+        showError("Stresmer timeout was happend");
+    }
+
+    @Override
+    public void onPlayerError() {
+        showError("Player error was happend");
+    }
+
+    private void showError(String error){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                tvError.append(error);
             }
         });
     }
