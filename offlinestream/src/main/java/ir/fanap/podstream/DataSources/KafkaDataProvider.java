@@ -123,6 +123,8 @@ public class KafkaDataProvider {
     }
 
 
+    // TODO Can be better
+    // timeout system can be improve
     private Object startTimeOutSchedule(int delayTime) {
         Log.e(PodStream.TAG, "ping !");
         isTimeOut = false;

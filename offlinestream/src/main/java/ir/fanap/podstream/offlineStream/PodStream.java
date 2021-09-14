@@ -4,7 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
+
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -19,6 +21,7 @@ import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.util.MimeTypes;
+
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.DataSources.FileDataSource;
@@ -84,6 +87,9 @@ public class PodStream implements KafkaDataProvider.Listener {
         End_Point_Base = mContext.getString(R.string.mainserver);
     }
 
+    /**
+     * needs token fo connect to server for stream files
+     **/
     public void setToken(String token) {
         this.token = token;
         prepareTopic();
@@ -167,6 +173,10 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
+
+    /**
+     *
+     **/
     public void setListener(StreamHandler.StreamEventListener listener) {
         this.listener = listener;
     }
@@ -174,7 +184,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     public void prepareStreaming(FileSetup file, Activity activity) {
         if (isReady) {
             instance.playerView = activity.findViewById(R.id.player_view);
-            if(playerView.getPlayer() != player)
+            if (playerView.getPlayer() != player)
                 playerView.setPlayer(player);
             if (isCheck) {
                 Thread t = new Thread(() -> provider.prepareDashFileForPlay(file.getVideoAddress(), token));
@@ -237,6 +247,9 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
+    /**
+     *
+     **/
     public void releasePlayer() {
         try {
             if (dataSourceFactory != null) {
@@ -253,6 +266,9 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
+    /**
+     *
+     **/
     public void clean() {
         releasePlayer();
         provider.release();
@@ -283,17 +299,19 @@ public class PodStream implements KafkaDataProvider.Listener {
         refreshPlayer();
     }
 
-    private void refreshPlayer(){
+    // TODO Can be better
+    //  we need a method which reset every thing automatically when has error
+    private void refreshPlayer() {
         try {
             releasePlayer();
             player.release();
-            player=null;
+            player = null;
             provider.release();
             isReady = false;
             instance.initPlayer(mContext);
             onStreamerIsReady(false);
             prepareTopic();
-        }catch (Exception _){
+        } catch (Exception _) {
 
         }
     }
