@@ -17,7 +17,7 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
         mContext = context;
         mView = view;
         offlinestreamer = repository.getOfflinestreamer();
-        offlinestreamer.initPlayer(mContext);
+//        offlinestreamer.initPlayer(mContext);
         init();
     }
 
@@ -27,8 +27,8 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
     }
 
     @Override
-    public void prepare(FileSetup file) {
-        offlinestreamer.prepareStreaming(file);
+    public void prepare(FileSetup file,Activity activity) {
+        offlinestreamer.prepareStreaming(file,activity);
     }
 
 
@@ -47,23 +47,20 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
         mView.hasError(error);
         if (errorCode == 17) {
             mView.timeOutHappend();
-            repository.getOfflinestreamer().clean();
-            repository.getOfflinestreamer().prepareTopic();
         }
         else if (errorCode == 18) {
             mView.onPlayerError();
-            repository.getOfflinestreamer().clean();
-            repository.getOfflinestreamer().prepareTopic();
         }
     }
 
     @Override
     public void destroy() {
         offlinestreamer.releasePlayer();
+
     }
 
     @Override
     public void setPlayer() {
-        repository.getOfflinestreamer().initPlayer(mContext);
+//        repository.getOfflinestreamer().initPlayer(mContext);
     }
 }

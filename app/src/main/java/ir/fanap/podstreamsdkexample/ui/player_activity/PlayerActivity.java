@@ -42,7 +42,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
                 build(
                         selectedHash
                 );
-        presenter.prepare(file);
+        presenter.prepare(file,this);
     }
 
 
@@ -56,7 +56,6 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
 
     void hideLoading() {
         if (progressBar.getVisibility() == View.VISIBLE) {
-
             progressBar.setVisibility(View.INVISIBLE);
         }
     }
