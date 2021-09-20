@@ -3,7 +3,7 @@ plugins {
     id 'com.kezong.fat-aar'
 }
 ext {
-    libraryVersion = '1.1.1'
+    libraryVersion = '1.1.2'
     ndkVersion = '21.3.6528147'
 }
 apply from: file('publish.gradle')
