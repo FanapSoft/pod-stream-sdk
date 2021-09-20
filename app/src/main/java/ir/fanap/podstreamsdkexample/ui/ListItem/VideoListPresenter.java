@@ -29,6 +29,7 @@ public class VideoListPresenter implements VideoListConstract.Presenter, StreamH
             setlistener();
             a = 5;
         }
+        repository.getOfflinestreamer().setToken(token);
     }
 
     public void setlistener() {

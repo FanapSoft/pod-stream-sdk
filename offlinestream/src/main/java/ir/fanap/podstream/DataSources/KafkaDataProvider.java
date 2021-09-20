@@ -1,19 +1,11 @@
 package ir.fanap.podstream.DataSources;
-
-import android.os.Build;
 import android.util.Log;
-
-import androidx.annotation.RequiresApi;
-
 import com.example.kafkassl.kafkaclient.ConsumResult;
 import com.example.kafkassl.kafkaclient.ConsumerClient;
 import com.example.kafkassl.kafkaclient.ProducerClient;
-
 import org.jetbrains.annotations.NotNull;
-
 import java.nio.ByteBuffer;
 import java.util.Properties;
-
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.Util.TimeOutUtils;
 import ir.fanap.podstream.Util.Utils;
@@ -42,28 +34,23 @@ public class KafkaDataProvider {
     private long offsetMainBuffer;
     private long endOfMainBuffer;
     private long filmLength;
+    boolean isTimeOut = false;
+    Object timeOutObg = null;
 
     public KafkaDataProvider(TopicResponse kafkaConfigs, Listener listener) {
         timeOutObg = startTimeOutSchedule(Constants.DefaultTimeOut);
         this.listener = listener;
         consumTopic = kafkaConfigs.getStreamTopic();
         produceTopic = kafkaConfigs.getControlTopic();
-      //  final Properties propertiesProducer = Utils.getSslProperties(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath());
-        final Properties propertiesProducer = new Properties();
-        propertiesProducer.setProperty("bootstrap.servers", kafkaConfigs.getBrokerAddress());
+        final Properties propertiesProducer = Utils.getSslProperties(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath());
         producerClient = new ProducerClient(propertiesProducer);
         producerClient.connect();
-        propertiesProducer.setProperty("group.id", String.valueOf(System.currentTimeMillis()));
+        propertiesProducer.setProperty("group.id", "264");
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
-
-        producerClient.produceMessege("salam".getBytes(),"test","test");
-        producerClient.produceMessege("salam".getBytes(),"test","test");
-        producerClient.produceMessege("salam".getBytes(),"test","test");
         if (listener != null)
             listener.onStreamerIsReady(true);
-
         cancelTimeOutSchedule(timeOutObg);
     }
 
@@ -82,9 +69,7 @@ public class KafkaDataProvider {
             if (isTimeOut)
                 break;
         }
-
         cancelTimeOutSchedule(timeOutObg);
-
         if (listener != null) {
             listener.onFileReady(this.dashFile);
         }
@@ -96,9 +81,9 @@ public class KafkaDataProvider {
         this.filmLength = dashFile.getSize();
         byte[] startBuffer = null;
         while (startBuffer == null || startBuffer.length < 250000) {
-            startBuffer = this.consumerClient.consumingWithKey(100).getValue();
             if (isTimeOut)
                 break;
+            startBuffer = this.consumerClient.consumingWithKey(20).getValue();
         }
         cancelTimeOutSchedule(timeOutObg);
     }
@@ -115,9 +100,6 @@ public class KafkaDataProvider {
         return offset >= endOfMainBuffer || offset < offsetMainBuffer || (offset + length) > endOfMainBuffer;
     }
 
-    boolean isTimeOut = false;
-    Object timeOutObg = null;
-
     public void updateBuffer(long offset, long length) {
         if (length > Constants.DefaultLengthValue) {
             getData(offset, length);
@@ -132,19 +114,18 @@ public class KafkaDataProvider {
             producerClient.produceMessege(buffers.array(), offset + "," + length, produceTopic);
             mainBuffer = consumerClient.consumingTopic(5);
             while ((mainBuffer == null || mainBuffer.length < length)) {
-                mainBuffer = consumerClient.consumingTopic(5);
                 if (isTimeOut)
                     break;
+                mainBuffer = consumerClient.consumingTopic(5);
             }
             cancelTimeOutSchedule(timeOutObg);
         }
     }
 
-    long start = -1;
-    long responseTime = -1;
 
+    // TODO Can be better
+    // timeout system can be improve
     private Object startTimeOutSchedule(int delayTime) {
-        start = System.currentTimeMillis();
         Log.e(PodStream.TAG, "ping !");
         isTimeOut = false;
         return TimeOutUtils.setTimeout(() -> {
@@ -155,8 +136,6 @@ public class KafkaDataProvider {
     }
 
     private void cancelTimeOutSchedule(@NotNull Object tid) {
-        responseTime = System.currentTimeMillis() - start;
-//        Log.e(PodStream.TAG, "response time = " + responseTime + " miliseconds ===>" + responseTime / 1000 + "seconds");
         Log.e(PodStream.TAG, "pong !");
         TimeOutUtils.clearTimeout(tid);
         timeOutObg = null;
@@ -180,9 +159,9 @@ public class KafkaDataProvider {
             producerClient.produceMessege(buffers.array(), (i + offset) + "," + newlength, produceTopic);
             newData = consumerClient.consumingTopic(5);
             while (newData == null || newData.length < newlength) {
-                newData = consumerClient.consumingTopic(5);
                 if (isTimeOut)
                     break;
+                newData = consumerClient.consumingTopic(5);
             }
             System.arraycopy(newData, 0, mainBuffer, i, newlength);
             if (exit)
@@ -191,13 +170,17 @@ public class KafkaDataProvider {
         cancelTimeOutSchedule(timeOutObg);
     }
 
-
     public void release() {
+        isTimeOut = true;
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(-2);
         producerClient.produceMessege(buffers.array(), ",", produceTopic);
         if (timeOutObg != null) {
             cancelTimeOutSchedule(timeOutObg);
         }
+    }
+
+    public void stopStreaming() {
+        isTimeOut = true;
     }
 }
