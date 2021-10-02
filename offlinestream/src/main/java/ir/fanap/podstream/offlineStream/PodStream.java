@@ -176,6 +176,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
+
     /**
      *
      **/
@@ -230,8 +231,8 @@ public class PodStream implements KafkaDataProvider.Listener {
         return new ProgressiveMediaSource.Factory(dataSourceFactory, new DefaultExtractorsFactory()).createMediaSource(mediaItem);
     }
 
-    public void disableLogs() {
-        showLog = false;
+    public void setShowLog(boolean showLogs) {
+        showLog = showLogs;
     }
 
     private void attachPlayer(DashResponse response) {
