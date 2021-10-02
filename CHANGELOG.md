@@ -1,4 +1,10 @@
 
+## Version [1.1.3] -2021-9-14
+
+[َAdded] setBackBufferSize(Boolean token) method
+
+[َAdded] setShowLog(Boolean token) method
+
 ## Version [1.1.2] -2021-9-14
 
 [َAdded] setToken(String token) method
