@@ -1,6 +1,7 @@
 package com.example.podstreamsdkexample;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -9,8 +10,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+
+import ir.fanap.podstream.Util.PodThreadManager;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -102,14 +106,39 @@ public class ExampleInstrumentedTest {
 //        System.out.println(Arrays.toString(start));
 //        System.out.println(Arrays.toString(end));
     }
-//startleng=1000
+
+    //startleng=1000
     //templegth= 50
     //offset = 960
     //count = 20
+    public void getcount(String log) {
+        int th = java.lang.Thread.activeCount();
+        Log.e("thidfd", "getcount: " + log + th);
+    }
 
     @Test
     public void test() {
-       // findofssets(1000, 50, 960, 20);
+        new PodThreadManager()
+                .addNewTask(() -> {
+
+
+                    for (int i = 0; i < 20; i++) {
+                        Log.e("loger", "aaa ");
+
+                    }
+
+
+                })
+                .addNewTask(() -> {
+
+
+                    for (int i = 0; i < 10; i++) {
+                        Log.e("loger", "bbb ");
+
+                    }
+
+                })
+                .runTasksASync();
     }
 
     void findofssets(int[] length1, int[] templength1, int offset, int count) {

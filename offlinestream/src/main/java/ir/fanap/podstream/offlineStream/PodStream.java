@@ -56,7 +56,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     private KafkaDataProvider provider;
     private SSLHelper sslHelper;
     private String End_Point_Base;
-    boolean isCheck = false;
+    private boolean isCheck = false;
+    private int backBufferSize = 60000;
 
     private PodStream() {
 
@@ -95,9 +96,14 @@ public class PodStream implements KafkaDataProvider.Listener {
         prepareTopic();
     }
 
+    public void setBackBufferSize(int bufferSize){
+        this.backBufferSize = bufferSize;
+    }
+
     private void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
-        builder.setBackBuffer(10000, true);
+        builder.setBackBuffer(backBufferSize, true);
+
         player = new SimpleExoPlayer.Builder(activity).setLoadControl(builder.build()).build();
         player.setPlayWhenReady(true);
         player.addListener(new Player.Listener() {
