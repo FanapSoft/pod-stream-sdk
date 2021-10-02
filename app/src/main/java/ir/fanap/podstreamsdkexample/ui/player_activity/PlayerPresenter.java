@@ -1,6 +1,6 @@
 package ir.fanap.podstreamsdkexample.ui.player_activity;
-
 import android.app.Activity;
+import com.google.android.exoplayer2.ui.PlayerView;
 import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.offlineStream.PodStream;
 import ir.fanap.podstream.offlineStream.StreamHandler;
@@ -17,7 +17,6 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
         mContext = context;
         mView = view;
         offlinestreamer = repository.getOfflinestreamer();
-//        offlinestreamer.initPlayer(mContext);
         init();
     }
 
@@ -27,8 +26,8 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
     }
 
     @Override
-    public void prepare(FileSetup file,Activity activity) {
-        offlinestreamer.prepareStreaming(file,activity);
+    public void prepare(FileSetup file, PlayerView playerView) {
+        offlinestreamer.prepareStreaming(file,playerView);
     }
 
 
@@ -56,11 +55,5 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
     @Override
     public void destroy() {
         offlinestreamer.releasePlayer();
-
-    }
-
-    @Override
-    public void setPlayer() {
-//        repository.getOfflinestreamer().initPlayer(mContext);
     }
 }

@@ -9,8 +9,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import com.example.podstreamsdkexample.R;
-
-
+import com.google.android.exoplayer2.ui.PlayerView;
 import ir.fanap.podstream.Entity.FileSetup;
 
 public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
@@ -20,6 +19,11 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     ProgressBar progressBar;
     TextView tvError;
     String selectedHash = "";
+    private PlayerView playerView;
+
+    // If you want to make custom player view you need make custem view and attach it to your playerview
+    // you can check below youtube link for make custom view.
+    // https://www.youtube.com/watch?v=AejSubS3beY
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +37,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         player_la = findViewById(R.id.player_la);
         progressBar = findViewById(R.id.progressBar);
         tvError = findViewById(R.id.tvError);
+        playerView = findViewById(R.id.player_view);
     }
 
     public void init() {
@@ -42,16 +47,14 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
                 build(
                         selectedHash
                 );
-        presenter.prepare(file,this);
+        presenter.prepare(file,playerView);
     }
 
 
     void showLoading() {
-
         if (progressBar.getVisibility() != View.VISIBLE) {
             progressBar.setVisibility(View.VISIBLE);
         }
-
     }
 
     void hideLoading() {

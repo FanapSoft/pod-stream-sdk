@@ -4,9 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
-
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -19,9 +17,8 @@ import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.ui.StyledPlayerView;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.util.MimeTypes;
-
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.DataSources.FileDataSource;
@@ -47,7 +44,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     private Activity mContext;
     private StreamHandler.StreamEventListener listener;
     private boolean showLog = false;
-    private StyledPlayerView playerView;
+    private PlayerView playerView;
     private SimpleExoPlayer player;
     private AppApi api;
     public String token;
@@ -179,7 +176,6 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
-
     /**
      *
      **/
@@ -187,9 +183,9 @@ public class PodStream implements KafkaDataProvider.Listener {
         this.listener = listener;
     }
 
-    public void prepareStreaming(FileSetup file, Activity activity) {
+    public void prepareStreaming(FileSetup file, PlayerView playerView) {
         if (isReady) {
-            instance.playerView = activity.findViewById(R.id.player_view);
+            instance.playerView =playerView;
             if (playerView.getPlayer() != player)
                 playerView.setPlayer(player);
             if (isCheck) {
