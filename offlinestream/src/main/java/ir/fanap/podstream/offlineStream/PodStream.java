@@ -28,6 +28,7 @@ import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstream.R;
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.Util.LogTypes;
+import ir.fanap.podstream.Util.PodThreadManager;
 import ir.fanap.podstream.Util.ssl.SSLHelper;
 import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
@@ -190,8 +191,12 @@ public class PodStream implements KafkaDataProvider.Listener {
             if (playerView.getPlayer() != player)
                 playerView.setPlayer(player);
             if (isCheck) {
-                Thread t = new Thread(() -> provider.prepareDashFileForPlay(file.getVideoAddress(), token));
-                t.start();
+                 new PodThreadManager().doThisAndGo(new Runnable() {
+                     @Override
+                     public void run() {
+                         provider.prepareDashFileForPlay(file.getVideoAddress(), token);
+                     }
+                 });
             } else {
                 file.setControlTopic(config.getControlTopic());
                 file.setStreamTopic(config.getStreamTopic());
@@ -226,7 +231,6 @@ public class PodStream implements KafkaDataProvider.Listener {
     private MediaSource buildMediaSource() {
         MediaItem mediaItem = new MediaItem.Builder()
                 .setUri(Uri.EMPTY)
-                .setMimeType(MimeTypes.APPLICATION_MPD)
                 .build();
         return new ProgressiveMediaSource.Factory(dataSourceFactory, new DefaultExtractorsFactory()).createMediaSource(mediaItem);
     }
