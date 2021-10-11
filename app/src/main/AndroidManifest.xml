@@ -16,7 +16,10 @@
 
 
         <activity android:name="ir.fanap.podstreamsdkexample.ui.player_activity.PlayerActivity"/>
-        <activity android:name="ir.fanap.podstreamsdkexample.ui.ListItem.VideoListActivity">
+        <activity android:name="ir.fanap.podstreamsdkexample.ui.ListItem.VideoListActivity"/>
+
+
+        <activity android:name="ir.fanap.podstreamsdkexample.ui.splash_activity.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

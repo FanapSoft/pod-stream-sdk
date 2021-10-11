@@ -22,7 +22,10 @@
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/ec4cbaeec8851a60939a9122fc1af5fa/jetified-offlinestreamsdk-1.0.2/res/layout/activity_exo_player.xml" value="0.12916246215943492" />
         <entry key="../../../../../.gradle/caches/transforms-2/files-2.1/fc3540106d6fdf28420357ffd4b8d9cc/jetified-offlinestreamsdk-1.0.4/res/layout/activity_exo_player.xml" value="0.11175580221997981" />
         <entry key="app/src/main/res/layout/player_activity.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/video_list_activity.xml" value="0.5" />
+        <entry key="app/src/main/res/layout/selector_activity.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/splash_activity.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/video_item_row.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/video_list_activity.xml" value="0.22" />
         <entry key="offlinestream/src/main/res/layout/activity_exo_player.xml" value="0.1" />
         <entry key="offlinestream/src/main/res/layout/control_play.xml" value="0.1" />
       </map>

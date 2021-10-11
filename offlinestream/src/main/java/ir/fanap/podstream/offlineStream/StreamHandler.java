@@ -5,8 +5,8 @@ import ir.fanap.podstream.network.response.AvoidObfuscate;
 public class StreamHandler {
 
     public interface StreamEventListener extends AvoidObfuscate {
-        void onStreamerReady(boolean state);
-        void onIsLoadingChanged(boolean isLoading);
+        default void onStreamerReady(boolean state){};
+        default void onIsLoadingChanged(boolean isLoading){};
         void hasError(String error,int errorCode);
     }
 
