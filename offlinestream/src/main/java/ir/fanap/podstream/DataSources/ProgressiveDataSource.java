@@ -70,7 +70,7 @@ public final class ProgressiveDataSource extends BaseDataSource{
     }
 
 
-    private RandomAccessFile file;
+//    private RandomAccessFile file;
 
     private Uri uri;
     private long bytesRemaining;
@@ -109,11 +109,13 @@ public final class ProgressiveDataSource extends BaseDataSource{
         }
         readLength = (int) Math.min(readLength, bytesRemaining);
         try {
+
                 if (provider.shouldUpdateBuffer(readPosition, readLength)) {
                     long readLengthBuffer = Math.max(readLength, Constants.DefaultLengthValue);
                     provider.updateBuffer(readPosition, readLengthBuffer);
                 }
                 System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+
         } catch (Exception ignored) {
 
         }
@@ -135,21 +137,21 @@ public final class ProgressiveDataSource extends BaseDataSource{
         uri = null;
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(-2);
-        try {
-
-            if (file != null) {
-                file.close();
-            }
-        } catch (IOException e) {
-            throw new com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException(e);
-        } finally {
-
-            file = null;
-            if (opened) {
-                opened = false;
-                transferEnded();
-            }
-        }
+//        try {
+//
+////            if (file != null) {
+////                file.close();
+////            }
+//        } catch (IOException e) {
+//            throw new com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException(e);
+//        } finally {
+//
+////            file = null;
+//            if (opened) {
+//                opened = false;
+//                transferEnded();
+//            }
+//        }
     }
 
 }

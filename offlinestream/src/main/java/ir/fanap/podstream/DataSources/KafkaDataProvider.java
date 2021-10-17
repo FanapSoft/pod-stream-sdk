@@ -125,7 +125,9 @@ public class KafkaDataProvider {
 
     // TODO Can be better
     // timeout system can be improve
+             long starttime = 0;
     private Object startTimeOutSchedule(int delayTime) {
+          starttime = System.currentTimeMillis();
         Log.e(PodStream.TAG, "ping !");
         isTimeOut = false;
         return TimeOutUtils.setTimeout(() -> {
@@ -136,9 +138,10 @@ public class KafkaDataProvider {
     }
 
     private void cancelTimeOutSchedule(@NotNull Object tid) {
-        Log.e(PodStream.TAG, "pong !");
+        Log.e(PodStream.TAG, "pong !" + (System.currentTimeMillis() -starttime));
         TimeOutUtils.clearTimeout(tid);
         timeOutObg = null;
+
     }
 
     public void getData(long offset, long length) {

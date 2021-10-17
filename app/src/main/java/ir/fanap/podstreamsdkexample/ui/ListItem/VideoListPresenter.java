@@ -17,14 +17,13 @@ public class VideoListPresenter implements VideoListConstract.Presenter, StreamH
         mContext = context;
         mView = view;
         repository = Repository.getInstance();
-
     }
 
     int a = 0;
 
     @Override
     public void init(String token) {
-        repository.Streamer(mContext, token);
+//        repository.Streamer(mContext, token);
         if (a == 0) {
             setlistener();
             a = 5;

@@ -20,6 +20,7 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.BaseDataSource;
 import com.google.android.exoplayer2.util.MimeTypes;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -52,7 +53,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     private AppApi api;
     public String token;
     private boolean isReady = false;
-    private ProgressiveDataSource.Factory dataSourceFactory;
+    private BaseDataSource.Factory dataSourceFactory;
+//    private ProgressiveDataSource.Factory dataSourceFactory;
     private KafkaDataProvider provider;
     private SSLHelper sslHelper;
     private String End_Point_Base;
@@ -103,9 +105,9 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
         builder.setBackBuffer(backBufferSize, true);
-
         player = new SimpleExoPlayer.Builder(activity).setLoadControl(builder.build()).build();
         player.setPlayWhenReady(true);
+
         player.addListener(new Player.Listener() {
             @Override
             public void onTimelineChanged(@NonNull Timeline timeline, int reason) {
@@ -237,11 +239,11 @@ public class PodStream implements KafkaDataProvider.Listener {
         mContext.runOnUiThread(() -> attachPlayer(response));
     }
 
-    private FileDataSource.Factory buildDataSourceFactory() {
+    private BaseDataSource.Factory buildDataSourceFactory() {
         return new FileDataSource.Factory();
     }
 
-    private ProgressiveDataSource.Factory buildDataSourceFactory(DashResponse response) {
+    private BaseDataSource.Factory buildDataSourceFactory(DashResponse response) {
         return new ProgressiveDataSource.Factory(response, provider);
     }
 
@@ -259,7 +261,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void attachPlayer(DashResponse response) {
         if (isReady) {
             provider.startStreming(response);
-            dataSourceFactory = buildDataSourceFactory(response);
+            dataSourceFactory = buildDataSourceFactory();
+//            dataSourceFactory = buildDataSourceFactory(response);
             MediaSource mediaSource = buildMediaSource();
             if (player != null) {
                 player.addMediaSource(mediaSource);
