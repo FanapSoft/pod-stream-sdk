@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.os.Build;
 import android.util.Log;
 import androidx.annotation.RequiresApi;
-import ir.fanap.podstream.offlineStream.StreamHandler;
+import ir.fanap.podstream.offlinestream.StreamHandler;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
 public class VideoListPresenter implements VideoListConstract.Presenter, StreamHandler.StreamEventListener {

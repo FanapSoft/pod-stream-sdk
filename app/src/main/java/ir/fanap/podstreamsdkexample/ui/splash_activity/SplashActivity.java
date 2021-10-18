@@ -2,25 +2,18 @@ package ir.fanap.podstreamsdkexample.ui.splash_activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.view.Window;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.example.podstreamsdkexample.R;
-import com.google.android.exoplayer2.ui.PlayerView;
 
-import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstreamsdkexample.ui.ListItem.VideoListActivity;
-import ir.fanap.podstreamsdkexample.ui.ListItem.VideoListPresenter;
 
 public class SplashActivity extends AppCompatActivity implements SplashConstract.View {
 
     SplashConstract.Presenter presenter;
+//    String token = "349157fdca054d1f8fdb78f2a57964c5";
     String token = "ed24e37c7ee84313acf2805a80122f94";
     TextView txt_state;
 

@@ -3,6 +3,7 @@ package ir.fanap.podstreamsdkexample.ui.player_activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -10,13 +11,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import com.example.podstreamsdkexample.R;
 import com.google.android.exoplayer2.ui.PlayerView;
-import ir.fanap.podstream.Entity.FileSetup;
+import ir.fanap.podstream.entity.FileSetup;
+import ir.fanap.podstream.network.response.DashResponse;
 
-public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
+public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View  {
 
     ConstraintLayout player_la;
     PlayerConstract.Presenter presenter;
     ProgressBar progressBar;
+    Button bt_seek;
     TextView tvError;
     String selectedHash = "";
     private PlayerView playerView;
@@ -38,6 +41,10 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         progressBar = findViewById(R.id.progressBar);
         tvError = findViewById(R.id.tvError);
         playerView = findViewById(R.id.player_view);
+        bt_seek = findViewById(R.id.bt_seek);
+        bt_seek.setOnClickListener(v -> {
+            presenter.seekTo(3000);
+        });
     }
 
     public void init() {
@@ -96,6 +103,15 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     @Override
     public void onPlayerError() {
         showError("Player error was happend");
+    }
+
+    @Override
+    public void onReset() {
+        FileSetup file = new FileSetup.Builder().
+                build(
+                        selectedHash
+                );
+        presenter.prepare(file,playerView);
     }
 
     private void showError(String error){

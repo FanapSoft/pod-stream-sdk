@@ -10,11 +10,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
-import ir.fanap.podstream.Util.PodThreadManager;
+import ir.fanap.podstream.util.PodThreadManager;
 
 /**
  * Instrumented test, which will execute on an Android device.

@@ -6,6 +6,12 @@
     android:layout_height="match_parent"
     tools:context="ir.fanap.podstreamsdkexample.ui.player_activity.PlayerActivity">
 
+    <Button
+        android:id="@+id/bt_seek"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/player_la"
         android:layout_width="match_parent"
@@ -16,8 +22,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0">
 
-        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <FrameLayout
             android:id="@+id/root"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -30,7 +35,9 @@
                 app:resize_mode="fit"
                 app:use_controller="true"
                 app:show_shuffle_button="true"
-                app:show_subtitle_button="true"/>
+                app:show_subtitle_button="true">
+
+            </com.google.android.exoplayer2.ui.PlayerView>
 
         </FrameLayout>
         <ProgressBar
