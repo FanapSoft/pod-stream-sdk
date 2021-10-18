@@ -85,6 +85,11 @@ public final class FileDataSource extends BaseDataSource {
 
             final File root = android.os.Environment.getExternalStorageDirectory();
             byte[] videoBuffer = new byte[0];
+            long starttime = System.currentTimeMillis();
+
+            Log.e("AHADEV", "ping !" + (System.currentTimeMillis() -starttime));
+
+
             for (int i = 0; i <= 0; i++) {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 if (i == 0) {
@@ -103,6 +108,7 @@ public final class FileDataSource extends BaseDataSource {
                         e.printStackTrace();
                     }
                 } else {
+
                     File file1 = new File(root.getAbsolutePath() + "/s_" + (i > 30 ? i - 31 : i) + ".m4s");
                     byte[] tempVideoBuffer = new byte[(int) file1.length()];
 
@@ -127,6 +133,7 @@ public final class FileDataSource extends BaseDataSource {
             if (listener != null) {
                 dataSource.addTransferListener(listener);
             }
+            Log.e("AHADEV", "pong !" + (System.currentTimeMillis() -starttime));
             return dataSource;
         }
     }
