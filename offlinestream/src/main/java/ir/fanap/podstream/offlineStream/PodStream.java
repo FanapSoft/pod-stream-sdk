@@ -57,7 +57,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     private SSLHelper sslHelper;
     private String End_Point_Base;
     private boolean isCheck = false;
-    private int backBufferSize = 180000;
+    private int backBufferSize = 3000;
 
     private PodStream() {
 
@@ -69,13 +69,15 @@ public class PodStream implements KafkaDataProvider.Listener {
             instance.setServer(activity);
             instance.setContext(activity);
             instance.netWorkInit(activity);
-            instance.initPlayer(activity);
         }
         return instance;
     }
 
-    private void setContext(Activity mContext) {
+    public void setContext(Activity mContext) {
         this.mContext = mContext;
+        if (sslHelper != null) {
+            return;
+        }
         sslHelper = new SSLHelper();
         try {
             sslHelper.generateFile(Constants.CERT_FILE, mContext);
@@ -135,6 +137,8 @@ public class PodStream implements KafkaDataProvider.Listener {
                 refreshPlayer();
             }
         });
+
+        playerView.setPlayer(player);
     }
 
 
@@ -197,16 +201,9 @@ public class PodStream implements KafkaDataProvider.Listener {
         this.listener = listener;
     }
 
-    FileSetup cacheFile;
-    PlayerView cachePlayerView;
-
     public void prepareStreaming(FileSetup file, PlayerView playerView) {
-        cacheFile = file;
-        cachePlayerView = playerView;
         if (isReady) {
             instance.playerView = playerView;
-            if (playerView.getPlayer() != player)
-                playerView.setPlayer(player);
             if (isCheck) {
                 new PodThreadManager().doThisAndGo(new Runnable() {
                     @Override
@@ -234,6 +231,7 @@ public class PodStream implements KafkaDataProvider.Listener {
 
 
     private void fileReadyToPlay(DashResponse response) {
+
         mContext.runOnUiThread(() -> attachPlayer(response));
     }
 
@@ -258,6 +256,8 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     private void attachPlayer(DashResponse response) {
         if (isReady) {
+            setBackBufferSize((int) response.getSize());
+            initPlayer(mContext);
             provider.startStreming(response);
             dataSourceFactory = buildDataSourceFactory(response);
             MediaSource mediaSource = buildMediaSource();
@@ -279,10 +279,11 @@ public class PodStream implements KafkaDataProvider.Listener {
             if (dataSourceFactory != null) {
                 player.stop();
                 playerView.removeAllViews();
-                dataSourceFactory = null;
-                player.clearVideoSurface();
-                player.clearMediaItems();
+                player.release();
                 provider.stopStreaming();
+                player = null;
+                playerView = null;
+                dataSourceFactory = null;
             }
         } catch (Exception e) {
             ShowLog("player", "Player released");
@@ -343,7 +344,6 @@ public class PodStream implements KafkaDataProvider.Listener {
             isCheck = false;
             provider.release();
             isReady = false;
-            instance.initPlayer(mContext);
             onStreamerIsReady(false);
             prepareTopic();
         } catch (Exception _) {

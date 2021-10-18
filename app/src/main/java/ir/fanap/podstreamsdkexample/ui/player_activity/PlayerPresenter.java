@@ -27,6 +27,7 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
 
     @Override
     public void prepare(FileSetup file, PlayerView playerView) {
+        offlinestreamer.setContext(mContext);
         offlinestreamer.prepareStreaming(file,playerView);
     }
 
