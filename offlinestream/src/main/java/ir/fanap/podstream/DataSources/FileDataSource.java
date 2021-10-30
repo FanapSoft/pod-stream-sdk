@@ -93,7 +93,7 @@ public final class FileDataSource extends BaseDataSource {
             for (int i = 0; i <= 0; i++) {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 if (i == 0) {
-                    File file = new File(root.getAbsolutePath() + "/test2flv.mp4");
+                    File file = new File(root.getAbsolutePath() + "/test2flv.webm");
                     byte[] temp = new byte[(int) file.length()];
                     FileInputStream fileInputStream = null;
                     try {
