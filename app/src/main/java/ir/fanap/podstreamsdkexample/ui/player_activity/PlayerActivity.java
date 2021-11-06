@@ -1,6 +1,7 @@
 package ir.fanap.podstreamsdkexample.ui.player_activity;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -27,12 +28,29 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         setContentView(R.layout.player_activity);
         init();
     }
+    private void test() {
+        Log.e("TAG1", "start " );
+        CountDownTimer timer = new CountDownTimer(1000,30000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.e("TAG1", "hello " );
+                tvError.setText(millisUntilFinished + "");
+            }
+
+            @Override
+            public void onFinish() {
+                Log.e("TAG1", "done " );
+            }
+        };
+        timer.start();
+    }
 
     private void initviews() {
         selectedHash = getIntent().getStringExtra("hash");
         player_la = findViewById(R.id.player_la);
         progressBar = findViewById(R.id.progressBar);
         tvError = findViewById(R.id.tvError);
+        test();
     }
 
     public void init() {

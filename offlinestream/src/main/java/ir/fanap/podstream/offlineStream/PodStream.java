@@ -126,7 +126,7 @@ public class PodStream implements KafkaDataProvider.Listener {
             @Override
             public void onPlayerError(@NonNull PlaybackException error) {
                 ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.errorCode + " " + error.getMessage());
-                refreshPlayer();
+//                refreshPlayer();
             }
         });
     }
@@ -290,13 +290,13 @@ public class PodStream implements KafkaDataProvider.Listener {
     @Override
     public void onTimeOut() {
         errorHandle(Constants.TimeOutStreamer, "StreamerTimeOut");
-        refreshPlayer();
+//        refreshPlayer();
     }
 
     @Override
     public void onError(String message) {
         errorHandle(Constants.StreamerError, message);
-        refreshPlayer();
+//        refreshPlayer();
     }
 
     // TODO Can be better
@@ -307,9 +307,9 @@ public class PodStream implements KafkaDataProvider.Listener {
             player.release();
             player = null;
             provider.release();
-            isReady = false;
-            instance.initPlayer(mContext);
-            onStreamerIsReady(false);
+//            isReady = false;
+//            instance.initPlayer(mContext);
+//            onStreamerIsReady(false);
             prepareTopic();
         } catch (Exception _) {
 

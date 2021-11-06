@@ -82,10 +82,15 @@ public class KafkaDataProvider {
 
     public void startStreming(DashResponse dashFile) {
         timeOutObg = startTimeOutSchedule(Constants.PrepareFileTimeOut);
+
+        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
+        buffers.putLong(-3);
+        producerClient.produceMessege(buffers.array(), 0 + "," + Constants.DefaultLengthValue, produceTopic);
+
         this.dashFile = dashFile;
         this.filmLength = dashFile.getSize();
         byte[] startBuffer = null;
-        while (startBuffer == null || startBuffer.length < 20000) {
+        while (startBuffer == null || startBuffer.length < Constants.DefaultLengthValue) {
             if (isTimeOut)
                 break;
             startBuffer = this.consumerClient.consumingWithKey(20).getValue();
@@ -112,7 +117,8 @@ public class KafkaDataProvider {
         if (length > Constants.DefaultLengthValue) {
             getData(offset, length);
         } else {
-            timeOutObg = startTimeOutSchedule(Constants.PrepareFileTimeOut);
+            length = Constants.PrepareFileTimeOut;
+            timeOutObg = 30000;
             if ((offset + length) > filmLength)
                 length = filmLength - offset;
             offsetMainBuffer = offset;

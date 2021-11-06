@@ -25,7 +25,7 @@ public class Repository {
     }
 
     public List<VideoItem> getVideo() {
-        String[] localServerHashList =  {"YPAL2RJJWN7VCBUL","PLJC5LDWU3BC9PMU","9D11L6BPZQ3ID26B","296FF59BVT6M8OLW"};
+        String[] localServerHashList =  {"YPAL2RJJWN7VCBUL","PLJC5LDWU3BC9PMU","TXSJRXENLD3BD8D7","296FF59BVT6M8OLW"};
         // String[] sandBoxServerHashList =  {"ZHBEOWS9PM2188E"}
 //        String[] mainServerHashList = {"5DLLXYSGNB7OQCRC", "6FVVFGQEPY4ZSF36", "ABYALWPAE1ZDO4BR"};
 

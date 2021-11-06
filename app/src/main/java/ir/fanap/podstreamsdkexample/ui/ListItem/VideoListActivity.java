@@ -30,7 +30,7 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
         super.onCreate(savedInstanceState);
         setContentView(R.layout.video_list_activity);
         init();
-        test();
+
     }
 
     private void test() {
