@@ -84,7 +84,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.mainserver);
+        End_Point_Base = mContext.getString(R.string.localserver);
     }
 
     /**
@@ -133,7 +133,7 @@ public class PodStream implements KafkaDataProvider.Listener {
 
 
     private void netWorkInit(Activity activity) {
-        api = RetrofitClient.getInstance(activity.getString(R.string.mainserver)).create(AppApi.class);
+        api = RetrofitClient.getInstance(activity.getString(R.string.localserver)).create(AppApi.class);
         mCompositeDisposable = new CompositeDisposable();
     }
 

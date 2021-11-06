@@ -83,8 +83,9 @@ public final class ProgressiveDataSource extends BaseDataSource{
         super(/* isNetwork= */ false);
         this.provider = provider;
         this.filmLength = mpegDashResponse.getSize();
-        if (filmLength ==0)
-            filmLength = 10000;
+        this.bytesRemaining = 0 ;
+        this.readPosition = 0 ;
+
     }
 
     @Override

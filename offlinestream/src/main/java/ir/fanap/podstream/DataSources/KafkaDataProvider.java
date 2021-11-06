@@ -1,11 +1,16 @@
 package ir.fanap.podstream.DataSources;
+
 import android.util.Log;
+
 import com.example.kafkassl.kafkaclient.ConsumResult;
 import com.example.kafkassl.kafkaclient.ConsumerClient;
 import com.example.kafkassl.kafkaclient.ProducerClient;
+
 import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.util.Properties;
+
 import ir.fanap.podstream.Util.Constants;
 import ir.fanap.podstream.Util.TimeOutUtils;
 import ir.fanap.podstream.Util.Utils;
@@ -80,7 +85,7 @@ public class KafkaDataProvider {
         this.dashFile = dashFile;
         this.filmLength = dashFile.getSize();
         byte[] startBuffer = null;
-        while (startBuffer == null || startBuffer.length < 250000) {
+        while (startBuffer == null || startBuffer.length < 20000) {
             if (isTimeOut)
                 break;
             startBuffer = this.consumerClient.consumingWithKey(20).getValue();
@@ -100,7 +105,10 @@ public class KafkaDataProvider {
         return offset >= endOfMainBuffer || offset < offsetMainBuffer || (offset + length) > endOfMainBuffer;
     }
 
+    long current = 0;
+
     public void updateBuffer(long offset, long length) {
+        current = System.currentTimeMillis();
         if (length > Constants.DefaultLengthValue) {
             getData(offset, length);
         } else {
@@ -120,8 +128,12 @@ public class KafkaDataProvider {
             }
             cancelTimeOutSchedule(timeOutObg);
         }
+        logger(PodStream.TAG, (System.currentTimeMillis() - current) + "");
     }
 
+    public void logger(String tag, String meesage) {
+        Log.e(tag, meesage);
+    }
 
     // TODO Can be better
     // timeout system can be improve
