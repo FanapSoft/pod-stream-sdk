@@ -15,9 +15,9 @@ public class Repository {
         return instance;
     }
 
-    public void Streamer(Activity activity, String token) {
+    public void Streamer(Activity activity) {
         if (offlinestreamer == null) {
-            offlinestreamer = PodStream.init(activity, token);
+            offlinestreamer = PodStream.init(activity);
         }
     }
 

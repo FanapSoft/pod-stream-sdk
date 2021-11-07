@@ -61,12 +61,12 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     }
 
-    public synchronized static PodStream init(Activity activity, String token) {
+    public synchronized static PodStream init(Activity activity) {
         if (instance == null) {
             instance = new PodStream();
             instance.setServer(activity);
             instance.setContext(activity);
-            instance.netWorkInit(activity);
+            instance.netWorkInit();
         }
         return instance;
     }
@@ -85,7 +85,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.mainserver);
+        End_Point_Base = mContext.getString(R.string.localserver);
     }
 
     /**
@@ -103,7 +103,6 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
         builder.setBackBuffer(backBufferSize, true);
-        builder.setTargetBufferBytes(backBufferSize);
 
         player = new SimpleExoPlayer.Builder(activity).setLoadControl(builder.build()).build();
         player.setPlayWhenReady(true);
@@ -148,8 +147,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     ;
 
 
-    private void netWorkInit(Activity activity) {
-        api = RetrofitClient.getInstance(activity.getString(R.string.mainserver)).create(AppApi.class);
+    private void netWorkInit() {
+        api = RetrofitClient.getInstance(End_Point_Base).create(AppApi.class);
     }
 
     private String getTopicUrl() {

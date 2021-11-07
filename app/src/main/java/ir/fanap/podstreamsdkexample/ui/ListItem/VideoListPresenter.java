@@ -24,7 +24,7 @@ public class VideoListPresenter implements VideoListConstract.Presenter, StreamH
 
     @Override
     public void init(String token) {
-        repository.Streamer(mContext, token);
+        repository.Streamer(mContext);
         if (a == 0) {
             setlistener();
             a = 5;

@@ -23,7 +23,7 @@ public class SplashPresenter implements SplashConstract.Presenter, StreamHandler
 
     @Override
     public void init(String token) {
-        repository.Streamer(mContext, token);
+        repository.Streamer(mContext);
         repository.getOfflinestreamer().setToken(token);
         repository.getOfflinestreamer().setListener(this);
     }
