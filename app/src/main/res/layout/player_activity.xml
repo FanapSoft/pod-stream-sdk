@@ -6,6 +6,12 @@
     android:layout_height="match_parent"
     tools:context="ir.fanap.podstreamsdkexample.ui.player_activity.PlayerActivity">
 
+    <Button
+        android:id="@+id/bt_seek"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/player_la"
         android:layout_width="match_parent"
@@ -16,16 +22,30 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0">
 
-        <include
-            android:id="@+id/include"
-            layout="@layout/activity_exo_player" />
+        <FrameLayout
+            android:id="@+id/root"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:keepScreenOn="true">
 
+            <com.google.android.exoplayer2.ui.PlayerView
+                android:id="@+id/player_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:resize_mode="fit"
+                app:use_controller="true"
+                app:show_shuffle_button="true"
+                app:show_subtitle_button="true">
+
+            </com.google.android.exoplayer2.ui.PlayerView>
+
+        </FrameLayout>
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="@+id/include"
+            app:layout_constraintBottom_toBottomOf="@+id/root"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

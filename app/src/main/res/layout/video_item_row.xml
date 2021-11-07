@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="200px"
-    android:layout_marginLeft="8px"
-    android:layout_marginTop="8px"
-    android:layout_marginRight="8px"
-    android:background="#FAF3F3">
+    android:layout_marginLeft="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginRight="8dp"
+    android:background="#ffffff">
 
     <ImageView
         android:id="@+id/imageView"
@@ -33,8 +33,8 @@
         android:id="@+id/txt_hashcode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
         android:text="TextView"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/txt_name"
         app:layout_constraintTop_toBottomOf="@+id/txt_quality" />
@@ -43,8 +43,8 @@
         android:id="@+id/txt_quality"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
         android:text="TextView"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toTopOf="@+id/txt_hashcode"
         app:layout_constraintEnd_toEndOf="@+id/txt_hashcode"
         app:layout_constraintTop_toBottomOf="@+id/txt_name" />

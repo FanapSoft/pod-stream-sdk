@@ -2,7 +2,6 @@ package ir.fanap.podstreamsdkexample.ui.ListItem;
 
 import java.util.List;
 
-import ir.fanap.podstream.Entity.FileSetup;
 import ir.fanap.podstreamsdkexample.data.VideoItem;
 
 public interface VideoListConstract {

@@ -18,7 +18,6 @@ import ir.fanap.podstreamsdkexample.ui.player_activity.PlayerActivity;
 public class VideoListActivity extends AppCompatActivity implements VideoListConstract.View {
 
     RecyclerView recycler_medialist;
-    TextView txt_state;
     VideoListConstract.Presenter presenter;
     VideoListAdaper videoListAdaper;
     String token = "ed24e37c7ee84313acf2805a80122f94";
@@ -51,7 +50,6 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
 
     private void initviews() {
         recycler_medialist = findViewById(R.id.recycler_medialist);
-        txt_state = findViewById(R.id.txt_state);
         recycler_medialist.setLayoutManager(new LinearLayoutManager(this));
     }
 
@@ -78,10 +76,10 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
 
     @Override
     public void onStreamerReady(boolean state) {
-        if (state)
-            txt_state.setText("Streamer is Ready");
-        else
-            txt_state.setText("Streamer not Ready");
+//        if (state)
+//            txt_state.setText("Streamer is Ready");
+//        else
+//            txt_state.setText("Streamer not Ready");
     }
 
 

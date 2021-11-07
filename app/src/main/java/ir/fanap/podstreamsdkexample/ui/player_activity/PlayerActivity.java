@@ -1,26 +1,32 @@
 package ir.fanap.podstreamsdkexample.ui.player_activity;
 
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import com.example.podstreamsdkexample.R;
+import com.google.android.exoplayer2.ui.PlayerView;
+import ir.fanap.podstream.entity.FileSetup;
+import ir.fanap.podstream.network.response.DashResponse;
 
-
-import ir.fanap.podstream.Entity.FileSetup;
-
-public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
+public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View  {
 
     ConstraintLayout player_la;
     PlayerConstract.Presenter presenter;
     ProgressBar progressBar;
+    Button bt_seek;
     TextView tvError;
     String selectedHash = "";
+    private PlayerView playerView;
+
+    // If you want to make custom player view you need make custem view and attach it to your playerview
+    // you can check below youtube link for make custom view.
+    // https://www.youtube.com/watch?v=AejSubS3beY
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,29 +34,17 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         setContentView(R.layout.player_activity);
         init();
     }
-    private void test() {
-        Log.e("TAG1", "start " );
-        CountDownTimer timer = new CountDownTimer(1000,30000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                Log.e("TAG1", "hello " );
-                tvError.setText(millisUntilFinished + "");
-            }
-
-            @Override
-            public void onFinish() {
-                Log.e("TAG1", "done " );
-            }
-        };
-        timer.start();
-    }
 
     private void initviews() {
         selectedHash = getIntent().getStringExtra("hash");
         player_la = findViewById(R.id.player_la);
         progressBar = findViewById(R.id.progressBar);
         tvError = findViewById(R.id.tvError);
-        test();
+        playerView = findViewById(R.id.player_view);
+        bt_seek = findViewById(R.id.bt_seek);
+        bt_seek.setOnClickListener(v -> {
+            presenter.seekTo(3000);
+        });
     }
 
     public void init() {
@@ -60,16 +54,14 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
                 build(
                         selectedHash
                 );
-        presenter.prepare(file,this);
+        presenter.prepare(file,playerView);
     }
 
 
     void showLoading() {
-
         if (progressBar.getVisibility() != View.VISIBLE) {
             progressBar.setVisibility(View.VISIBLE);
         }
-
     }
 
     void hideLoading() {
@@ -111,6 +103,15 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     @Override
     public void onPlayerError() {
         showError("Player error was happend");
+    }
+
+    @Override
+    public void onReset() {
+        FileSetup file = new FileSetup.Builder().
+                build(
+                        selectedHash
+                );
+        presenter.prepare(file,playerView);
     }
 
     private void showError(String error){

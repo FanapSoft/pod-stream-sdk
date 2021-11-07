@@ -3,7 +3,7 @@ package ir.fanap.podstreamsdkexample.data.remote;
 import android.app.Activity;
 import java.util.ArrayList;
 import java.util.List;
-import ir.fanap.podstream.offlineStream.PodStream;
+import ir.fanap.podstream.offlinestream.PodStream;
 import ir.fanap.podstreamsdkexample.data.VideoItem;
 
 public class Repository {
@@ -16,8 +16,9 @@ public class Repository {
     }
 
     public void Streamer(Activity activity, String token) {
-        if (offlinestreamer == null)
+        if (offlinestreamer == null) {
             offlinestreamer = PodStream.init(activity, token);
+        }
     }
 
     public PodStream getOfflinestreamer() {
@@ -27,7 +28,7 @@ public class Repository {
     public List<VideoItem> getVideo() {
         String[] localServerHashList =  {"YPAL2RJJWN7VCBUL","PLJC5LDWU3BC9PMU","TXSJRXENLD3BD8D7","296FF59BVT6M8OLW"};
         // String[] sandBoxServerHashList =  {"ZHBEOWS9PM2188E"}
-//        String[] mainServerHashList = {"5DLLXYSGNB7OQCRC", "6FVVFGQEPY4ZSF36", "ABYALWPAE1ZDO4BR"};
+        String[] mainServerHashList = {"5DLLXYSGNB7OQCRC", "6FVVFGQEPY4ZSF36", "ABYALWPAE1ZDO4BR"};
 
         List<VideoItem> items = new ArrayList<>();
         String[] names = {"video1", "video2", "test3", "video2", "test3"};
