@@ -34,9 +34,9 @@ public class Repository {
         List<VideoItem> items = new ArrayList<>();
         String[] names = {"video1", "video2", "test3", "video2", "test3"};
         String[] quality = {"320", "320", "320", "320", "320"};
-        for (int i = 0; i < localServerHashList.length; i++) {
+        for (int i = 0; i < mainServerHashList.length; i++) {
             VideoItem item = new VideoItem();
-            item.setVideoHash(localServerHashList[i]);
+            item.setVideoHash(mainServerHashList[i]);
             item.setVideoName(names[i]);
             item.setVideoQuality(quality[i]);
             items.add(item);
