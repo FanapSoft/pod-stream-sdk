@@ -61,7 +61,6 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
 
     @Override
     public void setPLayerView(PlayerView playerView) {
-        offlinestreamer.setContext(mContext);
         offlinestreamer.setPlayerView(playerView,mContext);
     }
 
