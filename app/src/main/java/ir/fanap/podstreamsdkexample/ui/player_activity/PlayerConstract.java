@@ -20,7 +20,8 @@ public interface PlayerConstract {
     interface Presenter{
         void init();
         void seekTo(long positionMs);
-        void prepare(FileSetup fileSetup,  PlayerView playerView);
+        void prepare(FileSetup fileSetup);
+        void setPLayerView( PlayerView playerView);
         void destroy();
     }
 }

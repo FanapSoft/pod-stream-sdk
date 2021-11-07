@@ -2,6 +2,7 @@ package ir.fanap.podstream.util;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.android.exoplayer2.util.Assertions;
 
@@ -43,6 +44,10 @@ public class Utils {
         return propertiesProducer;
     }
 
+
+    public static void logger(String tag, String meesage) {
+        Log.e(tag, meesage);
+    }
 
 
     private static RandomAccessFile openLocalFile(Uri uri) throws com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException {

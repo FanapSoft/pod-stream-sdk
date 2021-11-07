@@ -3,6 +3,8 @@ package ir.fanap.podstream.offlinestream;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -42,7 +44,6 @@ public class PodStream implements KafkaDataProvider.Listener {
     @SuppressLint("StaticFieldLeak")
     private static PodStream instance;
     private TopicResponse config;
-    private Activity mContext;
     private StreamHandler.StreamEventListener listener;
     private boolean showLog = false;
     private PlayerView playerView;
@@ -56,6 +57,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     private String End_Point_Base;
     private boolean isCheck = false;
     private int backBufferSize = 3000;
+    Activity mContext;
+    DashResponse response;
 
     private PodStream() {
 
@@ -66,13 +69,18 @@ public class PodStream implements KafkaDataProvider.Listener {
             instance = new PodStream();
             instance.setServer(activity);
             instance.setContext(activity);
+            instance.initSslHelper(activity);
             instance.netWorkInit();
         }
         return instance;
     }
 
+
     public void setContext(Activity mContext) {
         this.mContext = mContext;
+    }
+
+    private void initSslHelper(Activity mContext) {
         if (sslHelper != null) {
             return;
         }
@@ -103,7 +111,6 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
         builder.setBackBuffer(backBufferSize, true);
-
         player = new SimpleExoPlayer.Builder(activity).setLoadControl(builder.build()).build();
         player.setPlayWhenReady(true);
         player.addListener(new Player.Listener() {
@@ -132,20 +139,15 @@ public class PodStream implements KafkaDataProvider.Listener {
             @Override
             public void onPlayerError(@NonNull PlaybackException error) {
                 ShowLog(LogTypes.PLAYERERROR, "onPlayerError" + error.errorCode + " " + error.getMessage());
-                refreshPlayer();
             }
         });
 
         playerView.setPlayer(player);
-
     }
 
     public SimpleExoPlayer getPlayer() {
         return player;
     }
-
-    ;
-
 
     private void netWorkInit() {
         api = RetrofitClient.getInstance(End_Point_Base).create(AppApi.class);
@@ -183,10 +185,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     private void errorHandle(int errorCode, String ErrorMesssage) {
         if (listener != null) {
             listener.hasError(ErrorMesssage, errorCode);
-
         }
     }
-
 
     /**
      *
@@ -195,15 +195,18 @@ public class PodStream implements KafkaDataProvider.Listener {
         this.listener = listener;
     }
 
+    public void setPlayerView(PlayerView playerView, Activity activity) {
+        this.playerView = playerView;
+        initPlayer(activity);
+    }
 
-    public void prepareStreaming(FileSetup file, PlayerView playerView) {
+    public void prepareStreaming(FileSetup file, Activity activity) {
         if (isReady) {
-            instance.playerView = playerView;
             if (isCheck) {
                 new PodThreadManager().doThisAndGo(new Runnable() {
                     @Override
                     public void run() {
-                        provider.prepareDashFileForPlay(file.getVideoAddress(), token);
+                        provider.prepareDashFileForPlay(file.getVideoAddress(), token, activity);
                     }
                 });
             } else {
@@ -213,8 +216,8 @@ public class PodStream implements KafkaDataProvider.Listener {
                         .subscribeOn(Schedulers.io())
                         .observeOn(Schedulers.io())
                         .subscribe(response -> {
-                                    fileReadyToPlay(response);
                                     this.response = response;
+                                    fileReadyToPlay();
                                     isCheck = true;
                                 },
                                 throwable -> {
@@ -225,10 +228,13 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
-    DashResponse response;
 
-    private void fileReadyToPlay(DashResponse response) {
-        mContext.runOnUiThread(() -> attachPlayer(response));
+    private void fileReadyToPlay() {
+        if (isReady) {
+            attachPlayer();
+        } else {
+            ShowLog("player", "Not Ready");
+        }
     }
 
     private FileDataSource.Factory buildDataSourceFactory() {
@@ -250,41 +256,46 @@ public class PodStream implements KafkaDataProvider.Listener {
         showLog = showLogs;
     }
 
-    private void attachPlayer(DashResponse response) {
-        if (isReady) {
-            setBackBufferSize((int) response.getSize());
-            initPlayer(mContext);
-            provider.startStreming(response);
-            dataSourceFactory = buildDataSourceFactory(response);
-            MediaSource mediaSource = buildMediaSource();
-            if (player != null) {
-                player.addMediaSource(mediaSource);
-                player.prepare();
-                player.play();
-            }
-        } else {
-            ShowLog("player", "Not Ready");
-        }
+
+    public void attachPlayer() {
+            mContext.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (player != null) {
+                        releasePlayer();
+                        initPlayer(mContext);
+                    }
+                    provider.startStreming(response);
+                    if (dataSourceFactory == null)
+                        dataSourceFactory = buildDataSourceFactory(response);
+                    MediaSource mediaSource = buildMediaSource();
+                    if (player != null) {
+                        player.addMediaSource(mediaSource);
+                        player.prepare();
+                        player.play();
+                    }
+                }
+            });
     }
 
     /**
      *
      **/
     public void releasePlayer() {
-        try {
-            if (dataSourceFactory != null) {
-                player.stop();
-                playerView.removeAllViews();
-                playerView.setPlayer(null);
-                player.release();
-                provider.stopStreaming();
-                player = null;
-                dataSourceFactory = null;
-                playerView = null;
-            }
-        } catch (Exception e) {
-            ShowLog("player", "Player released");
+
+        if (player != null) {
+            player.stop();
+            player.release();
         }
+
+        if (playerView != null)
+            playerView.setPlayer(null);
+
+        if (provider != null)
+            provider.stopStreaming();
+
+        if (dataSourceFactory != null)
+            dataSourceFactory = null;
     }
 
     /**
@@ -304,9 +315,9 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     @Override
-    public void onFileReady(DashResponse dashFile) {
-        fileReadyToPlay(dashFile);
+    public void onFileReady(DashResponse dashFile, Activity activity) {
         this.response = dashFile;
+        fileReadyToPlay();
     }
 
     @Override
@@ -322,25 +333,4 @@ public class PodStream implements KafkaDataProvider.Listener {
         releasePlayer();
         listener.onReset(null);
     }
-
-    boolean isRefresh;
-
-    // TODO Can be better
-    //  we need a method which reset every thing automatically when has error
-    private void refreshPlayer() {
-        try {
-            isRefresh = true;
-            releasePlayer();
-            player.release();
-            player = null;
-            isCheck = false;
-            provider.release();
-            isReady = false;
-            onStreamerIsReady(false);
-            prepareTopic();
-        } catch (Exception _) {
-            ShowLog(LogTypes.ERROR, _.toString());
-        }
-    }
-
 }

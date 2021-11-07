@@ -9,12 +9,14 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+
 import com.example.podstreamsdkexample.R;
 import com.google.android.exoplayer2.ui.PlayerView;
+
 import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.network.response.DashResponse;
 
-public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View  {
+public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
 
     ConstraintLayout player_la;
     PlayerConstract.Presenter presenter;
@@ -43,18 +45,18 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         playerView = findViewById(R.id.player_view);
         bt_seek = findViewById(R.id.bt_seek);
         bt_seek.setOnClickListener(v -> {
-            presenter.seekTo(3000);
+            presenter.prepare(new FileSetup.Builder().build("PLJC5LDWU3BC9PMU"));
         });
     }
 
     public void init() {
         initviews();
         presenter = new PlayerPresenter(this, this);
-        FileSetup file = new FileSetup.Builder().
+        presenter.setPLayerView(playerView);
+        presenter.prepare(new FileSetup.Builder().
                 build(
                         selectedHash
-                );
-        presenter.prepare(file,playerView);
+                ));
     }
 
 
@@ -107,14 +109,12 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
 
     @Override
     public void onReset() {
-        FileSetup file = new FileSetup.Builder().
+        presenter.prepare(new FileSetup.Builder().
                 build(
-                        selectedHash
-                );
-        presenter.prepare(file,playerView);
+                        selectedHash));
     }
 
-    private void showError(String error){
+    private void showError(String error) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
