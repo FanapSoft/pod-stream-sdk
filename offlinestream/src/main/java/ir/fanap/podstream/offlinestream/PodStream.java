@@ -3,8 +3,6 @@ package ir.fanap.podstream.offlinestream;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -22,11 +20,14 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.datasources.FileDataSource;
 import ir.fanap.podstream.datasources.KafkaDataProvider;
 import ir.fanap.podstream.datasources.ProgressiveDataSource;
+import ir.fanap.podstream.entity.ErrorOutPut;
 import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.R;
 import ir.fanap.podstream.util.Constants;
@@ -44,7 +45,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     @SuppressLint("StaticFieldLeak")
     private static PodStream instance;
     private TopicResponse config;
-    private StreamHandler.StreamEventListener listener;
+    private StreamListener listener;
     private boolean showLog = false;
     private PlayerView playerView;
     private SimpleExoPlayer player;
@@ -55,10 +56,10 @@ public class PodStream implements KafkaDataProvider.Listener {
     private KafkaDataProvider provider;
     private SSLHelper sslHelper;
     private String End_Point_Base;
-    private boolean isCheck = false;
     private int backBufferSize = 3000;
     Activity mContext;
     DashResponse response;
+    protected Gson gson;
 
     private PodStream() {
 
@@ -71,6 +72,7 @@ public class PodStream implements KafkaDataProvider.Listener {
             instance.setContext(activity);
             instance.initSslHelper(activity);
             instance.netWorkInit();
+            instance.gson = new GsonBuilder().setPrettyPrinting().create();
         }
         return instance;
     }
@@ -184,47 +186,26 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     private void errorHandle(int errorCode, String ErrorMesssage) {
         if (listener != null) {
-            listener.hasError(ErrorMesssage, errorCode);
+            ErrorOutPut error = new ErrorOutPut(true, ErrorMesssage, errorCode);
+            String jsonError = gson.toJson(error);
+            listener.onError(jsonError, error);
         }
     }
 
     /**
      *
      **/
-    public void setListener(StreamHandler.StreamEventListener listener) {
+    public void setListener(StreamListener listener) {
         this.listener = listener;
     }
 
-    public void setPlayerView(PlayerView playerView, Activity activity) {
+    public void setPlayerView(PlayerView playerView) {
         this.playerView = playerView;
-        initPlayer(activity);
     }
 
-    public void prepareStreaming(FileSetup file, Activity activity) {
+    public void prepareStreaming(FileSetup file) {
         if (isReady) {
-            if (isCheck) {
-                new PodThreadManager().doThisAndGo(new Runnable() {
-                    @Override
-                    public void run() {
-                        provider.prepareDashFileForPlay(file.getVideoAddress(), token, activity);
-                    }
-                });
-            } else {
-                file.setControlTopic(config.getControlTopic());
-                file.setStreamTopic(config.getStreamTopic());
-                api.getDashManifest(file.getUrl(End_Point_Base, token))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(Schedulers.io())
-                        .subscribe(response -> {
-                                    this.response = response;
-                                    fileReadyToPlay();
-                                    isCheck = true;
-                                },
-                                throwable -> {
-                                    ShowLog(LogTypes.ERROR, throwable.getMessage());
-                                    errorHandle(Constants.StreamerResponseErrorCode, throwable.getMessage());
-                                });
-            }
+            new PodThreadManager().doThisAndGo(() -> provider.prepareDashFileForPlay(file, token, mContext));
         }
     }
 
@@ -258,44 +239,49 @@ public class PodStream implements KafkaDataProvider.Listener {
 
 
     public void attachPlayer() {
-            mContext.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (player != null) {
-                        releasePlayer();
-                        initPlayer(mContext);
-                    }
-                    provider.startStreming(response);
-                    if (dataSourceFactory == null)
-                        dataSourceFactory = buildDataSourceFactory(response);
-                    MediaSource mediaSource = buildMediaSource();
-                    if (player != null) {
-                        player.addMediaSource(mediaSource);
-                        player.prepare();
-                        player.play();
-                    }
+        mContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (player != null) {
+                    releasePlayer();
                 }
-            });
+                initPlayer(mContext);
+                provider.startStreming(response);
+                if (dataSourceFactory == null)
+                    dataSourceFactory = buildDataSourceFactory(response);
+                MediaSource mediaSource = buildMediaSource();
+                if (player != null) {
+                    player.addMediaSource(mediaSource);
+                    player.prepare();
+                    player.play();
+                }
+            }
+        });
     }
 
     /**
      *
      **/
     public void releasePlayer() {
+        try {
 
-        if (player != null) {
-            player.stop();
-            player.release();
+            if (player != null) {
+                player.stop();
+                player.release();
+                player = null;
+            }
+
+            if (playerView != null)
+                playerView.setPlayer(null);
+
+            if (provider != null)
+                provider.stopStreaming();
+
+            if (dataSourceFactory != null)
+                dataSourceFactory = null;
+        } catch (Exception e) {
         }
 
-        if (playerView != null)
-            playerView.setPlayer(null);
-
-        if (provider != null)
-            provider.stopStreaming();
-
-        if (dataSourceFactory != null)
-            dataSourceFactory = null;
     }
 
     /**
@@ -323,14 +309,21 @@ public class PodStream implements KafkaDataProvider.Listener {
     @Override
     public void onTimeOut() {
         errorHandle(Constants.TimeOutStreamer, "StreamerTimeOut");
-        releasePlayer();
-        listener.onReset(null);
+        if (player != null) {
+            releasePlayer();
+            listener.onReset();
+        }
     }
 
     @Override
     public void onError(String message) {
         errorHandle(Constants.StreamerError, message);
-        releasePlayer();
-        listener.onReset(null);
+        mContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                releasePlayer();
+            }
+        });
+        listener.onReset();
     }
 }

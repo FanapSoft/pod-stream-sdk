@@ -7,13 +7,14 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.ui.PlayerView;
 
+import ir.fanap.podstream.entity.ErrorOutPut;
 import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.offlinestream.PodStream;
-import ir.fanap.podstream.offlinestream.StreamHandler;
+import ir.fanap.podstream.offlinestream.PodStreamAdapter;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
-public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler.StreamEventListener {
+public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract.Presenter {
     PodStream offlinestreamer;
     PlayerConstract.View mView;
     Activity mContext;
@@ -50,19 +51,19 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
     }
 
     @Override
-    public void onReset(DashResponse response) {
+    public void onReset( ) {
         mView.onReset();
     }
 
     @Override
     public void prepare(FileSetup file) {
-        offlinestreamer.prepareStreaming(file,mContext);
+        offlinestreamer.prepareStreaming(file);
     }
 
     @Override
     public void setPLayerView(PlayerView playerView) {
         offlinestreamer.setContext(mContext);
-        offlinestreamer.setPlayerView(playerView,mContext);
+        offlinestreamer.setPlayerView(playerView);
     }
 
 
@@ -76,12 +77,15 @@ public class PlayerPresenter implements PlayerConstract.Presenter, StreamHandler
         mView.isLoading(isLoading);
     }
 
+
+
     @Override
-    public void hasError(String error, int errorCode) {
-        mView.hasError(error);
-        if (errorCode == 17) {
+    public void onError(String content, ErrorOutPut error) {
+        super.onError(content, error);
+        mView.hasError(error.getErrorMessage());
+        if (error.getErrorCode() == 17) {
             mView.timeOutHappend();
-        } else if (errorCode == 18) {
+        } else if (error.getErrorCode() == 18) {
             mView.onPlayerError();
         }
     }

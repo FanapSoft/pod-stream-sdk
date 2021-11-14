@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 
+import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.util.Constants;
 import ir.fanap.podstream.util.TimeOutUtils;
 import ir.fanap.podstream.util.Utils;
@@ -60,19 +61,21 @@ public class KafkaDataProvider {
         final Properties propertiesProducer = Utils.getSslProperties(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath());
         producerClient = new ProducerClient(propertiesProducer);
         producerClient.connect();
+
         propertiesProducer.setProperty("group.id", "264");
         propertiesProducer.setProperty("auto.offset.reset", "beginning");
         consumerClient = new ConsumerClient(propertiesProducer, consumTopic);
         consumerClient.connect();
+
         if (listener != null)
             listener.onStreamerIsReady(true);
         cancelTimeOutSchedule(timeOutObg);
     }
 
-
-    public void prepareDashFileForPlay(String Hash, String Token, Activity activity) {
+    public void prepareDashFileForPlay(FileSetup file, String Token, Activity activity) {
+        this.dashFile = new DashResponse();
         timeOutObg = startTimeOutSchedule(Constants.DefaultTimeOut);
-        sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_INFORMATION, Hash + "," + Token);
+        sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_INFORMATION, file.getVideoAddress() + "," + Token);
         String key = "-1";
         while (!key.startsWith("5")) {
             ConsumResult cr = consumerClient.consumingWithKey(1000);
@@ -87,6 +90,7 @@ public class KafkaDataProvider {
             listener.onFileReady(this.dashFile, activity);
         }
     }
+
 
     public void startStreming(DashResponse dashFile) {
         timeOutObg = startTimeOutSchedule(Constants.PrepareFileTimeOut);
@@ -118,8 +122,7 @@ public class KafkaDataProvider {
         if (length > Constants.DefaultLengthValue) {
             getData(offset, length);
         } else {
-            length = Constants.PrepareFileTimeOut;
-            timeOutObg = 30000;
+            timeOutObg = startTimeOutSchedule(Constants.MaxStremerTimeOut);
             if ((offset + length) > filmLength)
                 length = filmLength - offset;
             offsetMainBuffer = offset;
@@ -134,7 +137,7 @@ public class KafkaDataProvider {
             }
             cancelTimeOutSchedule(timeOutObg);
         }
-     }
+    }
 
     // TODO Can be better
     // timeout system can be improve
@@ -168,7 +171,6 @@ public class KafkaDataProvider {
                 isEndOfStream = true;
             }
 
-
             sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_BYTE, (i + offset) + "," + newlength);
 
             byte[] newData = consumerClient.consumingTopic(5);
@@ -184,11 +186,10 @@ public class KafkaDataProvider {
         cancelTimeOutSchedule(timeOutObg);
     }
 
-    public byte[] sendMessageToKafka(long message, String key) {
+    public void sendMessageToKafka(long message, String key) {
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(message);
         producerClient.produceMessege(buffers.array(), key, produceTopic);
-        return buffers.array();
     }
 
     public void release() {
