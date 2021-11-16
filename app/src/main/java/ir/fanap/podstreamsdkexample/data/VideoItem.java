@@ -6,6 +6,13 @@ public class VideoItem {
    private String videoQuality;
    private String size;
 
+    public VideoItem(String videoName, String videoHash, String videoQuality, String size) {
+        this.videoName = videoName;
+        this.videoHash = videoHash;
+        this.videoQuality = videoQuality;
+        this.size = size;
+    }
+
     public String getVideoName() {
         return videoName;
     }

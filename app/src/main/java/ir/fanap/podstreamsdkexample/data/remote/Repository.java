@@ -34,7 +34,7 @@ public class Repository {
         return offlinestreamer;
     }
 
-    int server = 2;
+    int server = 1;
 
     // 0 == local  , 1 == main  ,  2 == sandbox
     public List<VideoItem> getVideo() {

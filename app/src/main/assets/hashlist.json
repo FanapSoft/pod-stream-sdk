@@ -27,6 +27,18 @@
   ],
   "main": [
     {
+      "videoName": "SunnyBunniesS01E01.mp4",
+      "videoHash": "KAF5TL5G1U1HNUMB",
+      "videoQuality": "320",
+      "size": ""
+    },
+    {
+      "videoName": "SunnyBunniesS01E01_x256.mp4",
+      "videoHash": "5K1RFFMXCCTGCDU1",
+      "videoQuality": "320",
+      "size": ""
+    },
+    {
       "videoName": "didin dirin",
       "videoHash": "5DLLXYSGNB7OQCRC",
       "videoQuality": "",

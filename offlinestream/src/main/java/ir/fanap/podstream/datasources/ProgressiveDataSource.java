@@ -91,17 +91,21 @@ public final class ProgressiveDataSource extends BaseDataSource {
             filmLength = 10000;
     }
 
+    boolean errorReported = false;
+
     @Override
     public long open(DataSpec dataSpec) throws IOException {
         uri = dataSpec.uri;
         readPosition = ((int) dataSpec.position);
         bytesRemaining = (int) (filmLength - (dataSpec.position));//2781222l
         if (bytesRemaining <= 0 || readPosition + bytesRemaining > filmLength) {
-            if (provider.getListener() != null)
-                provider.getListener().onError("Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
+            if (provider.getListener() != null && !errorReported) {
+                errorReported = true;
+                provider.getListener().onError(-1, "Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
                         + "], length: " + filmLength);
-            throw new IOException("Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
-                    + "], length: " + filmLength);
+            }
+//            throw new IOException("Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
+//                    + "], length: " + filmLength);
         }
 
         return bytesRemaining;

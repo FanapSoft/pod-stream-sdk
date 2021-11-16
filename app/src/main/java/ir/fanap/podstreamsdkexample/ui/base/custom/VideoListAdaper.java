@@ -1,15 +1,25 @@
 package ir.fanap.podstreamsdkexample.ui.base.custom;
 
 import android.content.Context;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.podstreamsdkexample.R;
+
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import ir.fanap.podstreamsdkexample.data.VideoItem;
+
 public class VideoListAdaper extends RecyclerView.Adapter<VideoListAdaper.ViewHolder> {
 
     ItemClickListener mClickListener;
@@ -25,6 +35,12 @@ public class VideoListAdaper extends RecyclerView.Adapter<VideoListAdaper.ViewHo
         this.dataList = dataList;
         notifyDataSetChanged();
     }
+
+    public void addVideo(VideoItem video) {
+        this.dataList.add(0, video);
+        notifyDataSetChanged();
+    }
+
 
     public void setmClickListener(ItemClickListener mClickListener) {
         this.mClickListener = mClickListener;
@@ -57,6 +73,7 @@ public class VideoListAdaper extends RecyclerView.Adapter<VideoListAdaper.ViewHo
         TextView txt_name;
         TextView txt_quality;
         TextView txt_hashcode;
+
         ViewHolder(View itemView) {
             super(itemView);
             txt_name = itemView.findViewById(R.id.txt_name);

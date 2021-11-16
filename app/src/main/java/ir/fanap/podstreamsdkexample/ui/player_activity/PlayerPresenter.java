@@ -26,6 +26,7 @@ public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract
         mView = view;
         offlinestreamer = repository.getOfflinestreamer();
         init();
+        mView.onRecivedVideoList(repository.getVideo());
     }
 
     @Override
@@ -58,7 +59,7 @@ public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract
 
     @Override
     public void setPLayerView(PlayerView playerView) {
-        offlinestreamer.setContext(mContext);
+//        offlinestreamer.setContext(mContext);
         offlinestreamer.setPlayerView(playerView);
     }
 
@@ -87,6 +88,6 @@ public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract
 
     @Override
     public void destroy() {
-        offlinestreamer.release();
+        offlinestreamer.releasePlayerResource();
     }
 }

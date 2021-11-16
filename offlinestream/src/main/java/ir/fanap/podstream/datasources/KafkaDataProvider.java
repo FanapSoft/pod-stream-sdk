@@ -32,7 +32,7 @@ public class KafkaDataProvider {
 
         void onTimeOut();
 
-        void onError(String message);
+        void onError(int code, String message);
     }
 
 
@@ -48,6 +48,7 @@ public class KafkaDataProvider {
     private long filmLength;
     boolean streamerIsStoped = false;
     Object timeOutObg = null;
+
 
     public Listener getListener() {
         return listener;
@@ -85,7 +86,7 @@ public class KafkaDataProvider {
             if (streamerIsStoped)
                 break;
         }
-        if(file.getVideoAddress().equals("296FF59BVT6M8OLW"))
+        if (file.getVideoAddress().equals("296FF59BVT6M8OLW"))
             this.dashFile.setSize(147031744);
 
         cancelTimeOutSchedule(timeOutObg);
@@ -96,8 +97,8 @@ public class KafkaDataProvider {
 
 
     public void startStreming(DashResponse dashFile) {
-        if (dashFile.getSize()==0)
-            listener.onError("file has problem ");
+        if (dashFile.getSize() == 0)
+            listener.onError(0,"file has problem ");
         timeOutObg = startTimeOutSchedule(Constants.PrepareFileTimeOut);
         sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_BYTE, 0 + "," + Constants.DefaultLengthValue);
         this.dashFile = dashFile;
@@ -164,12 +165,13 @@ public class KafkaDataProvider {
 
     public void getData(long offset, long length) {
         boolean isEndOfStream = false;
-        timeOutObg = startTimeOutSchedule(Constants.MaxStremerTimeOut);
+
         mainBuffer = new byte[(int) length];
         offsetMainBuffer = offset;
         endOfMainBuffer = offset + (length - 1);
 
         for (int i = 0; i < length; i += Constants.DefaultLengthValue) {
+            timeOutObg = startTimeOutSchedule(Constants.MaxStremerTimeOut);
             int newlength = Constants.DefaultLengthValue;
             if (i + newlength > length) {
                 newlength = (int) length - i;
@@ -185,10 +187,11 @@ public class KafkaDataProvider {
                 newData = consumerClient.consumingTopic(100);
             }
             System.arraycopy(newData, 0, mainBuffer, i, newlength);
+            cancelTimeOutSchedule(timeOutObg);
             if (isEndOfStream)
                 break;
         }
-        cancelTimeOutSchedule(timeOutObg);
+
     }
 
     public void sendMessageToKafka(long message, String key) {

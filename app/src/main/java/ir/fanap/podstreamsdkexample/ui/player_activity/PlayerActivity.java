@@ -13,8 +13,12 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import com.example.podstreamsdkexample.R;
 import com.google.android.exoplayer2.ui.PlayerView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstreamsdkexample.data.VideoItem;
 
 public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
 
@@ -25,6 +29,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     TextView tvError;
     String selectedHash = "";
     private PlayerView playerView;
+    List<VideoItem> response = new ArrayList<>();
 
     // If you want to make custom player view you need make custem view and attach it to your playerview
     // you can check below youtube link for make custom view.
@@ -47,9 +52,21 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         playerView = findViewById(R.id.player_view);
         bt_seek = findViewById(R.id.bt_seek);
         bt_seek.setOnClickListener(v -> {
+            presenter.prepare(new FileSetup.Builder().build(getRandomHash()));
 //            presenter.seekTo(lastposition);
-          presenter.prepare(new FileSetup.Builder().build("PLJC5LDWU3BC9PMU"));
         });
+    }
+
+    public String getRandomHash() {
+        int random_int = (int) Math.floor(Math.random() * ((response.size()-1 )- 0 + 1) + 0);
+        String randomHash = response.get(random_int).getVideoHash();
+        if (randomHash.equals(getIntent().getStringExtra("hash"))) {
+            random_int++;
+            if (random_int == response.size())
+                random_int = 0;
+            randomHash = response.get(random_int).getVideoHash();
+        }
+        return randomHash;
     }
 
     public void init() {
@@ -93,12 +110,6 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     @Override
     public void hasError(String error) {
         Log.e("TAG", "hasError: " + error);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                //  ext_error.append(error + "------\n");
-            }
-        });
     }
 
     @Override
@@ -112,20 +123,20 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     }
 
     @Override
-    public void onReset(long position) {
-        lastposition = (int) position;
-        presenter.prepare(new FileSetup.Builder().
-                build(
-                        selectedHash));
+    public void onRecivedVideoList(List<VideoItem> response) {
+        this.response = response;
     }
+//
+//    @Override
+//    public void onReset(long position) {
+//        lastposition = (int) position;
+//        presenter.prepare(new FileSetup.Builder().
+//                build(
+//                        selectedHash));
+//    }
 
     private void showError(String error) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                tvError.append(error);
-            }
-        });
+        tvError.append(error);
     }
 
 

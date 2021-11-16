@@ -41,6 +41,7 @@ import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
 import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
+import ir.fanap.podstream.util.HandlerMessageType.ActConstants;
 
 public class PodStream implements KafkaDataProvider.Listener {
 
@@ -58,7 +59,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     private KafkaDataProvider provider;
     private SSLHelper sslHelper;
     private String End_Point_Base;
-    private int backBufferSize = 3000;
+    private int backBufferSize = 60000;
     private Activity mContext;
     private DashResponse response;
     protected Gson gson;
@@ -98,7 +99,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.sandboxserver);
+        End_Point_Base = mContext.getString(R.string.mainserver);
     }
 
     /**
@@ -194,7 +195,7 @@ public class PodStream implements KafkaDataProvider.Listener {
 
     private void errorHandle(int errorCode, String ErrorMesssage) {
         ErrorOutPut error = new ErrorOutPut(true, ErrorMesssage, errorCode);
-        mHandler.obtainMessage(3, gson.toJson(error)).sendToTarget();
+        mHandler.obtainMessage(ActConstants.MESSAGE_ERROR, gson.toJson(error)).sendToTarget();
     }
 
     /**
@@ -216,7 +217,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
 
-    public void refreshStreaming(FileSetup file) {
+    private void refreshStreaming(FileSetup file) {
         if (checkRequireds()) {
             new PodThreadManager().doThisAndGo(() -> provider.prepareDashFileForPlay(file, token));
         }
@@ -238,10 +239,10 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void fileReadyToPlay() {
-        if (isReady) {
-            release();
-            initPlayer();
-            mHandler.obtainMessage(2, "start to streaming !!!").sendToTarget();
+        if (checkRequireds()) {
+            releasePlayerResource();
+            preparePlayer();
+            mHandler.obtainMessage(ActConstants.MESSAGE_PLAYER_PREAPARE_TO_PLAY, "start to streaming !!!").sendToTarget();
         } else {
             ShowLog("player", "Not Ready");
         }
@@ -266,20 +267,28 @@ public class PodStream implements KafkaDataProvider.Listener {
         showLog = showLogs;
     }
 
-    public void initPlayer() {
+    /**
+     * set  {@link #currentWindow}. to default value (0)
+     * set  {@link #playbackPosition}. to default value (0)
+     * send message to {@link #mHandler} for init player
+     */
+    private void preparePlayer() {
         currentWindow = 0;
         playbackPosition = 0L;
-        mHandler.obtainMessage(1).sendToTarget();
+        mHandler.obtainMessage(ActConstants.MESSAGE_PLAYER_INIT).sendToTarget();
     }
 
-    public void release() {
-        mHandler.obtainMessage(0).sendToTarget();
+    /**
+     * send message to {@link #mHandler} for release player
+     */
+    public void releasePlayerResource() {
+        mHandler.obtainMessage(ActConstants.MESSAGE_PLAYER_RELEASE).sendToTarget();
     }
 
     /**
      *
      **/
-    public void releasePlayer() {
+    private void releasePlayer() {
         try {
             if (player != null) {
                 playWhenReady = player.getPlayWhenReady();
@@ -299,7 +308,7 @@ public class PodStream implements KafkaDataProvider.Listener {
      *
      **/
     public void clean() {
-        release();
+        releasePlayerResource();
         provider.release();
         instance = null;
         isReady = false;
@@ -326,25 +335,28 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     @Override
-    public void onError(String message) {
+    public void onError(int code, String message) {
         errorHandle(Constants.StreamerError, message);
-//        if (player != null) {
-//            refreshStreaming(currentFile);
-//        }
+        if (player != null) {
+            provider.stopStreaming();
+            refreshStreaming(currentFile);
+        }
     }
 
-
+    //ExoPlayer instances must be accessed from a single application thread. For the vast majority of cases this should be the application’s main thread.
+    //https://exoplayer.dev/hello-world.html
     Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message message) {
-            switch (message.what) {
-                case 0:
+            @ActConstants int currentMessageType = message.what;
+            switch (currentMessageType) {
+                case ActConstants.MESSAGE_PLAYER_RELEASE:
                     releasePlayer();
                     break;
-                case 1:
+                case ActConstants.MESSAGE_PLAYER_INIT:
                     initPlayer(mContext);
                     break;
-                case 2:
+                case ActConstants.MESSAGE_PLAYER_PREAPARE_TO_PLAY:
                     provider.startStreming(response);
                     dataSourceFactory = buildDataSourceFactory(response);
                     MediaSource mediaSource = buildMediaSource();
@@ -355,7 +367,7 @@ public class PodStream implements KafkaDataProvider.Listener {
                         player.prepare();
                     }
                     break;
-                case 3:
+                case ActConstants.MESSAGE_ERROR:
                     if (listener != null) {
                         try {
                             ErrorOutPut error = gson.fromJson(message.obj.toString(), ErrorOutPut.class);
