@@ -34,11 +34,11 @@ public class Repository {
         return offlinestreamer;
     }
 
-    int server = 1;
+    int server = 0;
 
     // 0 == local  , 1 == main  ,  2 == sandbox
     public List<VideoItem> getVideo() {
-        if (server == 0)
+        if (server == 1)
             return Utils.getLocalVideoList(activity);
         else if (server == 2)
             return Utils.getSandBoxVideoList(activity);

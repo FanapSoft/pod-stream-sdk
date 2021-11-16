@@ -27,6 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import io.reactivex.schedulers.Schedulers;
+import ir.fanap.podstream.datasources.DataProvider;
 import ir.fanap.podstream.datasources.FileDataSource;
 import ir.fanap.podstream.datasources.KafkaDataProvider;
 import ir.fanap.podstream.datasources.ProgressiveDataSource;
@@ -43,7 +44,7 @@ import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 import ir.fanap.podstream.util.HandlerMessageType.ActConstants;
 
-public class PodStream implements KafkaDataProvider.Listener {
+public class PodStream implements DataProvider.Listener {
 
     public static String TAG = "PodStream";
     @SuppressLint("StaticFieldLeak")
@@ -56,14 +57,14 @@ public class PodStream implements KafkaDataProvider.Listener {
     public String token;
     private boolean isReady = false;
     private ProgressiveDataSource.Factory dataSourceFactory;
-    private KafkaDataProvider provider;
+    private DataProvider provider;
     private SSLHelper sslHelper;
     private String End_Point_Base;
     private int backBufferSize = 60000;
     private Activity mContext;
-    private DashResponse response;
     protected Gson gson;
     private FileSetup currentFile = null;
+
 
     private PodStream() {
 
@@ -185,7 +186,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void connectKafkaProvider(TopicResponse kafkaConfigs) {
-        provider = new KafkaDataProvider(kafkaConfigs, this);
+        provider = new DataProvider(kafkaConfigs, token, this);
     }
 
     private void ShowLog(String logType, String message) {
@@ -212,14 +213,14 @@ public class PodStream implements KafkaDataProvider.Listener {
     public void prepareStreaming(FileSetup file) {
         if (checkRequireds()) {
             currentFile = file;
-            new PodThreadManager().doThisAndGo(() -> provider.prepareDashFileForPlay(file, token));
+            new PodThreadManager().doThisAndGo(() -> provider.startStreming(file));
         }
     }
 
 
     private void refreshStreaming(FileSetup file) {
         if (checkRequireds()) {
-            new PodThreadManager().doThisAndGo(() -> provider.prepareDashFileForPlay(file, token));
+            new PodThreadManager().doThisAndGo(() -> provider.startStreming(file));
         }
     }
 
@@ -248,15 +249,16 @@ public class PodStream implements KafkaDataProvider.Listener {
         }
     }
 
-    private FileDataSource.Factory buildDataSourceFactory() {
-        return new FileDataSource.Factory();
-    }
+//    private FileDataSource.Factory buildDataSourceFactory() {
+//        return new FileDataSource.Factory();
+//    }
 
-    private ProgressiveDataSource.Factory buildDataSourceFactory(DashResponse response) {
-        return new ProgressiveDataSource.Factory(response, provider);
+    private ProgressiveDataSource.Factory buildDataSourceFactory() {
+        return new ProgressiveDataSource.Factory(provider);
     }
 
     private MediaSource buildMediaSource() {
+        dataSourceFactory = buildDataSourceFactory();
         MediaItem mediaItem = new MediaItem.Builder()
                 .setUri(Uri.EMPTY)
                 .build();
@@ -298,8 +300,8 @@ public class PodStream implements KafkaDataProvider.Listener {
                 player.release();
                 player = null;
             }
-            if (provider != null)
-                provider.stopStreaming();
+
+            provider.endBufferManagerTask();
         } catch (Exception e) {
         }
     }
@@ -309,7 +311,7 @@ public class PodStream implements KafkaDataProvider.Listener {
      **/
     public void clean() {
         releasePlayerResource();
-        provider.release();
+        provider.endBufferManagerTask();
         instance = null;
         isReady = false;
     }
@@ -321,8 +323,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     @Override
-    public void onFileReady(DashResponse dashFile) {
-        this.response = dashFile;
+    public void onFileReady() {
         fileReadyToPlay();
     }
 
@@ -338,7 +339,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     public void onError(int code, String message) {
         errorHandle(Constants.StreamerError, message);
         if (player != null) {
-            provider.stopStreaming();
+            provider.endBufferManagerTask();
             refreshStreaming(currentFile);
         }
     }
@@ -357,8 +358,6 @@ public class PodStream implements KafkaDataProvider.Listener {
                     initPlayer(mContext);
                     break;
                 case ActConstants.MESSAGE_PLAYER_PREAPARE_TO_PLAY:
-                    provider.startStreming(response);
-                    dataSourceFactory = buildDataSourceFactory(response);
                     MediaSource mediaSource = buildMediaSource();
                     if (player != null) {
                         player.addMediaSource(mediaSource);

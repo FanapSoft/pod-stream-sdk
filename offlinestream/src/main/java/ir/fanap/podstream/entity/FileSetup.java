@@ -18,6 +18,7 @@ public class FileSetup implements AvoidObfuscate {
 
     }
 
+
     public String getVideoAddress() {
         return videoAddress;
     }

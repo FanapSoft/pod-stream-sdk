@@ -41,12 +41,10 @@ public final class ProgressiveDataSource extends BaseDataSource {
      */
     public static final class Factory implements DataSource.Factory {
         private TransferListener listener;
-        DashResponse dashFile;
         private ProgressiveDataSource dataSource;
-        KafkaDataProvider provider;
+        DataProvider provider;
 
-        public Factory(DashResponse response, KafkaDataProvider provider) {
-            dashFile = response;
+        public Factory(DataProvider provider) {
             this.provider = provider;
         }
 
@@ -65,7 +63,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
 
         @Override
         public ProgressiveDataSource createDataSource() {
-            dataSource = new ProgressiveDataSource(dashFile, provider);
+            dataSource = new ProgressiveDataSource(provider);
             if (listener != null) {
                 dataSource.addTransferListener(listener);
             }
@@ -81,12 +79,12 @@ public final class ProgressiveDataSource extends BaseDataSource {
     private boolean opened;
     private long filmLength;
     private long readPosition;
-    KafkaDataProvider provider;
+    DataProvider provider;
 
-    public ProgressiveDataSource(DashResponse mpegDashResponse, KafkaDataProvider provider) {
+    public ProgressiveDataSource(DataProvider provider) {
         super(/* isNetwork= */ false);
         this.provider = provider;
-        this.filmLength = mpegDashResponse.getSize();
+        this.filmLength = this.provider.fileSize;
         if (filmLength == 0)
             filmLength = 10000;
     }
@@ -121,11 +119,8 @@ public final class ProgressiveDataSource extends BaseDataSource {
         }
         readLength = (int) Math.min(readLength, bytesRemaining);
         try {
-            if (provider.shouldUpdateBuffer(readPosition, readLength)) {
-                long readLengthBuffer = Math.max(readLength, Constants.DefaultLengthValue);
-                provider.updateBuffer(readPosition, readLengthBuffer);
-            }
-            System.arraycopy(provider.getDataBuffer(), (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+            byte[] mainbuffer = provider.getBuffer(readPosition, readLength);
+            System.arraycopy(mainbuffer, (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
         } catch (Exception ignored) {
 
         }
