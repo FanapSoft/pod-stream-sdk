@@ -8,6 +8,7 @@ public class FileSetup implements AvoidObfuscate {
     private final String videoAddress;
     private final int quality;
     private final boolean mobile;
+    private final long size;
     private final boolean progressive;
     private String streamTopic;
     private String controlTopic;
@@ -42,6 +43,7 @@ public class FileSetup implements AvoidObfuscate {
         this.quality = builder.quality;
         this.mobile = builder.mobile;
         this.progressive = builder.progressive;
+        size = 0;
     }
 
     public static class Builder implements AvoidObfuscate {
@@ -50,12 +52,16 @@ public class FileSetup implements AvoidObfuscate {
         private int quality = 240;
         private boolean mobile = true;
         private boolean progressive = true;
-
+        private long size = 0;
         public FileSetup build(String videoAddress) {
             this.videoAddress = videoAddress;
             return new FileSetup(this);
         }
 
+        public Builder setSize(long size) {
+            this.size = size;
+            return this;
+        }
     }
 
 

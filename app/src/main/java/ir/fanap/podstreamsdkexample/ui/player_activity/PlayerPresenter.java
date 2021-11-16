@@ -50,10 +50,6 @@ public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract
         });
     }
 
-    @Override
-    public void onReset( ) {
-        mView.onReset();
-    }
 
     @Override
     public void prepare(FileSetup file) {
@@ -78,7 +74,6 @@ public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract
     }
 
 
-
     @Override
     public void onError(String content, ErrorOutPut error) {
         super.onError(content, error);
@@ -92,6 +87,6 @@ public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract
 
     @Override
     public void destroy() {
-        offlinestreamer.releasePlayer();
+        offlinestreamer.release();
     }
 }

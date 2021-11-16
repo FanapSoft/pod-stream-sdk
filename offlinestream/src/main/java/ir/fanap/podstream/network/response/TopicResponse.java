@@ -70,7 +70,8 @@ public class TopicResponse implements Serializable,AvoidObfuscate{
     }
 
     public String getBrokerAddress() {
-        return "192.168.112.32";
+//        return "192.168.112.32";
+       return brokerAddress;
     }
 
     public void setBrokerAddress(String brokerAddress) {

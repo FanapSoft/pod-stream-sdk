@@ -12,7 +12,7 @@ public interface PlayerConstract {
         void hasError(String error);
         void timeOutHappend();
         void onPlayerError();
-        void onReset();
+        void onReset(long lastposition);
 
 
     }

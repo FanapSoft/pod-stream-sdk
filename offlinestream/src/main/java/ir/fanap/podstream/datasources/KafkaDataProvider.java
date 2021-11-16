@@ -28,7 +28,7 @@ public class KafkaDataProvider {
     public interface Listener {
         void onStreamerIsReady(boolean state);
 
-        void onFileReady(DashResponse dashFile, Activity activity);
+        void onFileReady(DashResponse dashFile);
 
         void onTimeOut();
 
@@ -72,27 +72,32 @@ public class KafkaDataProvider {
         cancelTimeOutSchedule(timeOutObg);
     }
 
-    public void prepareDashFileForPlay(FileSetup file, String Token, Activity activity) {
+    public void prepareDashFileForPlay(FileSetup file, String Token) {
         this.dashFile = new DashResponse();
         timeOutObg = startTimeOutSchedule(Constants.DefaultTimeOut);
         sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_INFORMATION, file.getVideoAddress() + "," + Token);
         String key = "-1";
         while (!key.startsWith("5")) {
-            ConsumResult cr = consumerClient.consumingWithKey(1000);
+            ConsumResult cr = consumerClient.consumingWithKey(100);
             key = new String(cr.getKey());
             long fileSize = Utils.byteArrayToLong(cr.getValue());
             this.dashFile.setSize(fileSize);
             if (streamerIsStoped)
                 break;
         }
+        if(file.getVideoAddress().equals("296FF59BVT6M8OLW"))
+            this.dashFile.setSize(147031744);
+
         cancelTimeOutSchedule(timeOutObg);
         if (listener != null) {
-            listener.onFileReady(this.dashFile, activity);
+            listener.onFileReady(this.dashFile);
         }
     }
 
 
     public void startStreming(DashResponse dashFile) {
+        if (dashFile.getSize()==0)
+            listener.onError("file has problem ");
         timeOutObg = startTimeOutSchedule(Constants.PrepareFileTimeOut);
         sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_BYTE, 0 + "," + Constants.DefaultLengthValue);
         this.dashFile = dashFile;
@@ -101,7 +106,7 @@ public class KafkaDataProvider {
         while (startBuffer == null || startBuffer.length < Constants.DefaultLengthValue) {
             if (streamerIsStoped)
                 break;
-            startBuffer = this.consumerClient.consumingWithKey(20).getValue();
+            startBuffer = this.consumerClient.consumingWithKey(100).getValue();
         }
         cancelTimeOutSchedule(timeOutObg);
     }
@@ -129,11 +134,11 @@ public class KafkaDataProvider {
             endOfMainBuffer = offset + (length - 1);
 
             sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_BYTE, offset + "," + length);
-            mainBuffer = consumerClient.consumingTopic(5);
+            mainBuffer = consumerClient.consumingTopic(100);
             while ((mainBuffer == null || mainBuffer.length < length)) {
                 if (streamerIsStoped)
                     break;
-                mainBuffer = consumerClient.consumingTopic(5);
+                mainBuffer = consumerClient.consumingTopic(100);
             }
             cancelTimeOutSchedule(timeOutObg);
         }
@@ -173,11 +178,11 @@ public class KafkaDataProvider {
 
             sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_BYTE, (i + offset) + "," + newlength);
 
-            byte[] newData = consumerClient.consumingTopic(5);
+            byte[] newData = consumerClient.consumingTopic(100);
             while (newData == null || newData.length < newlength) {
                 if (streamerIsStoped)
                     break;
-                newData = consumerClient.consumingTopic(5);
+                newData = consumerClient.consumingTopic(100);
             }
             System.arraycopy(newData, 0, mainBuffer, i, newlength);
             if (isEndOfStream)

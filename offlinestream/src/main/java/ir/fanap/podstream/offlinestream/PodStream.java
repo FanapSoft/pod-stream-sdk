@@ -3,6 +3,9 @@ package ir.fanap.podstream.offlinestream;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -44,7 +47,6 @@ public class PodStream implements KafkaDataProvider.Listener {
     public static String TAG = "PodStream";
     @SuppressLint("StaticFieldLeak")
     private static PodStream instance;
-    private TopicResponse config;
     private StreamListener listener;
     private boolean showLog = false;
     private PlayerView playerView;
@@ -57,9 +59,10 @@ public class PodStream implements KafkaDataProvider.Listener {
     private SSLHelper sslHelper;
     private String End_Point_Base;
     private int backBufferSize = 3000;
-    Activity mContext;
-    DashResponse response;
+    private Activity mContext;
+    private DashResponse response;
     protected Gson gson;
+    private FileSetup currentFile = null;
 
     private PodStream() {
 
@@ -95,7 +98,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.localserver);
+        End_Point_Base = mContext.getString(R.string.sandboxserver);
     }
 
     /**
@@ -109,6 +112,11 @@ public class PodStream implements KafkaDataProvider.Listener {
     public void setBackBufferSize(int bufferSize) {
         this.backBufferSize = bufferSize;
     }
+
+
+    private boolean playWhenReady = true;
+    private int currentWindow = 0;
+    private long playbackPosition = 0L;
 
     private void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
@@ -159,6 +167,7 @@ public class PodStream implements KafkaDataProvider.Listener {
         return End_Point_Base + "getTopic/?clientId=" + token;
     }
 
+
     private void prepareTopic() {
         api.getTopics(getTopicUrl())
                 .subscribeOn(Schedulers.io())
@@ -175,7 +184,6 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void connectKafkaProvider(TopicResponse kafkaConfigs) {
-        config = kafkaConfigs;
         provider = new KafkaDataProvider(kafkaConfigs, this);
     }
 
@@ -185,11 +193,8 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void errorHandle(int errorCode, String ErrorMesssage) {
-        if (listener != null) {
-            ErrorOutPut error = new ErrorOutPut(true, ErrorMesssage, errorCode);
-            String jsonError = gson.toJson(error);
-            listener.onError(jsonError, error);
-        }
+        ErrorOutPut error = new ErrorOutPut(true, ErrorMesssage, errorCode);
+        mHandler.obtainMessage(3, gson.toJson(error)).sendToTarget();
     }
 
     /**
@@ -204,15 +209,39 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     public void prepareStreaming(FileSetup file) {
-        if (isReady) {
-            new PodThreadManager().doThisAndGo(() -> provider.prepareDashFileForPlay(file, token, mContext));
+        if (checkRequireds()) {
+            currentFile = file;
+            new PodThreadManager().doThisAndGo(() -> provider.prepareDashFileForPlay(file, token));
         }
     }
 
 
+    public void refreshStreaming(FileSetup file) {
+        if (checkRequireds()) {
+            new PodThreadManager().doThisAndGo(() -> provider.prepareDashFileForPlay(file, token));
+        }
+    }
+
+
+    private boolean checkRequireds() {
+        if (!isReady) {
+            errorHandle(Constants.StreamerError, "Not Ready");
+            return false;
+        } else if (mContext == null) {
+            errorHandle(Constants.StreamerError, "Context is null");
+            return false;
+        } else if (token == null) {
+            errorHandle(Constants.StreamerError, "Token is null");
+            return false;
+        }
+        return true;
+    }
+
     private void fileReadyToPlay() {
         if (isReady) {
-            attachPlayer();
+            release();
+            initPlayer();
+            mHandler.obtainMessage(2, "start to streaming !!!").sendToTarget();
         } else {
             ShowLog("player", "Not Ready");
         }
@@ -237,26 +266,14 @@ public class PodStream implements KafkaDataProvider.Listener {
         showLog = showLogs;
     }
 
+    public void initPlayer() {
+        currentWindow = 0;
+        playbackPosition = 0L;
+        mHandler.obtainMessage(1).sendToTarget();
+    }
 
-    public void attachPlayer() {
-        mContext.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (player != null) {
-                    releasePlayer();
-                }
-                initPlayer(mContext);
-                provider.startStreming(response);
-                if (dataSourceFactory == null)
-                    dataSourceFactory = buildDataSourceFactory(response);
-                MediaSource mediaSource = buildMediaSource();
-                if (player != null) {
-                    player.addMediaSource(mediaSource);
-                    player.prepare();
-                    player.play();
-                }
-            }
-        });
+    public void release() {
+        mHandler.obtainMessage(0).sendToTarget();
     }
 
     /**
@@ -264,31 +281,25 @@ public class PodStream implements KafkaDataProvider.Listener {
      **/
     public void releasePlayer() {
         try {
-
             if (player != null) {
-                player.stop();
+                playWhenReady = player.getPlayWhenReady();
+                currentWindow = player.getCurrentWindowIndex();
+                playbackPosition = player.getCurrentPosition();
+                Log.e("'TAG'", "releasePlayer: " + playWhenReady + "   --->   " + currentWindow + "   --->   " + "   --->   " + playbackPosition);
                 player.release();
                 player = null;
             }
-
-            if (playerView != null)
-                playerView.setPlayer(null);
-
             if (provider != null)
                 provider.stopStreaming();
-
-            if (dataSourceFactory != null)
-                dataSourceFactory = null;
         } catch (Exception e) {
         }
-
     }
 
     /**
      *
      **/
     public void clean() {
-        releasePlayer();
+        release();
         provider.release();
         instance = null;
         isReady = false;
@@ -301,7 +312,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     @Override
-    public void onFileReady(DashResponse dashFile, Activity activity) {
+    public void onFileReady(DashResponse dashFile) {
         this.response = dashFile;
         fileReadyToPlay();
     }
@@ -310,20 +321,53 @@ public class PodStream implements KafkaDataProvider.Listener {
     public void onTimeOut() {
         errorHandle(Constants.TimeOutStreamer, "StreamerTimeOut");
         if (player != null) {
-            releasePlayer();
-            listener.onReset();
+            refreshStreaming(currentFile);
         }
     }
 
     @Override
     public void onError(String message) {
         errorHandle(Constants.StreamerError, message);
-        mContext.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                releasePlayer();
-            }
-        });
-        listener.onReset();
+//        if (player != null) {
+//            refreshStreaming(currentFile);
+//        }
     }
+
+
+    Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message message) {
+            switch (message.what) {
+                case 0:
+                    releasePlayer();
+                    break;
+                case 1:
+                    initPlayer(mContext);
+                    break;
+                case 2:
+                    provider.startStreming(response);
+                    dataSourceFactory = buildDataSourceFactory(response);
+                    MediaSource mediaSource = buildMediaSource();
+                    if (player != null) {
+                        player.addMediaSource(mediaSource);
+                        player.setPlayWhenReady(playWhenReady);
+                        player.seekTo(currentWindow, playbackPosition);
+                        player.prepare();
+                    }
+                    break;
+                case 3:
+                    if (listener != null) {
+                        try {
+                            ErrorOutPut error = gson.fromJson(message.obj.toString(), ErrorOutPut.class);
+                            String jsonError = gson.toJson(error);
+                            listener.onError(jsonError, error);
+                        } catch (Exception e) {
+                            listener.onError(message.obj.toString(), new ErrorOutPut(true, message.obj.toString(), 18));
+                        }
+                    }
+                    break;
+            }
+        }
+    };
 }
+

@@ -16,11 +16,6 @@ public class PodStreamAdapter implements StreamListener {
     }
 
     @Override
-    public void onReset( ) {
-
-    }
-
-    @Override
     public void onError(String content, ErrorOutPut error) {
 
     }

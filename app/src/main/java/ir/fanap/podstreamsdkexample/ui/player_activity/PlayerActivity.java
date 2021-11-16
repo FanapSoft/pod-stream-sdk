@@ -37,6 +37,8 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         init();
     }
 
+    int lastposition = 1000;
+
     private void initviews() {
         selectedHash = getIntent().getStringExtra("hash");
         player_la = findViewById(R.id.player_la);
@@ -45,7 +47,8 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         playerView = findViewById(R.id.player_view);
         bt_seek = findViewById(R.id.bt_seek);
         bt_seek.setOnClickListener(v -> {
-            presenter.prepare(new FileSetup.Builder().build("PLJC5LDWU3BC9PMU"));
+//            presenter.seekTo(lastposition);
+          presenter.prepare(new FileSetup.Builder().build("PLJC5LDWU3BC9PMU"));
         });
     }
 
@@ -53,6 +56,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
         initviews();
         presenter = new PlayerPresenter(this, this);
         presenter.setPLayerView(playerView);
+
         presenter.prepare(new FileSetup.Builder().
                 build(
                         selectedHash
@@ -108,7 +112,8 @@ public class PlayerActivity extends AppCompatActivity implements PlayerConstract
     }
 
     @Override
-    public void onReset() {
+    public void onReset(long position) {
+        lastposition = (int) position;
         presenter.prepare(new FileSetup.Builder().
                 build(
                         selectedHash));

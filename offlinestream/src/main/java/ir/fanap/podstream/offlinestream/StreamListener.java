@@ -11,9 +11,6 @@ public interface StreamListener {
     default void onIsLoadingChanged(boolean isLoading) {
     }
 
-    default void onReset() {
-    }
-
     default void onError(String content, ErrorOutPut error) {
 
     }
