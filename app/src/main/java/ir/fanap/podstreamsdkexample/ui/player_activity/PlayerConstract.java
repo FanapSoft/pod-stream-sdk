@@ -1,7 +1,11 @@
 package ir.fanap.podstreamsdkexample.ui.player_activity;
 import com.google.android.exoplayer2.ui.PlayerView;
+
+import java.util.List;
+
 import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstreamsdkexample.data.VideoItem;
 
 public interface PlayerConstract {
     interface View{
@@ -12,8 +16,7 @@ public interface PlayerConstract {
         void hasError(String error);
         void timeOutHappend();
         void onPlayerError();
-        void onReset();
-
+        void onRecivedVideoList(List<VideoItem> response);
 
     }
 

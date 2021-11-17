@@ -1,12 +1,15 @@
 package ir.fanap.podstreamsdkexample.ui.splash_activity;
 
 import android.app.Activity;
+import android.widget.Toast;
 
+import ir.fanap.podstream.entity.ErrorOutPut;
 import ir.fanap.podstream.offlinestream.PodStream;
-import ir.fanap.podstream.offlinestream.StreamHandler;
+import ir.fanap.podstream.offlinestream.PodStreamAdapter;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 
-public class SplashPresenter implements SplashConstract.Presenter, StreamHandler.StreamEventListener {
+public class SplashPresenter extends PodStreamAdapter implements SplashConstract.Presenter {
+    PodStream offlinestreamer;
     SplashConstract.View mView;
     Activity mContext;
     Repository repository;
@@ -15,13 +18,14 @@ public class SplashPresenter implements SplashConstract.Presenter, StreamHandler
         repository = Repository.getInstance();
         mContext = context;
         mView = view;
+        offlinestreamer = repository.getOfflinestreamer();
+
     }
 
 
     @Override
     public void init(String token) {
         repository.Streamer(mContext);
-        repository.getOfflinestreamer().setBackBufferSize(10000);
         repository.getOfflinestreamer().setToken(token);
         repository.getOfflinestreamer().setListener(this);
     }
@@ -38,7 +42,8 @@ public class SplashPresenter implements SplashConstract.Presenter, StreamHandler
     }
 
     @Override
-    public void hasError(String error, int errorCode) {
-
+    public void onError(String content, ErrorOutPut error) {
+        super.onError(content, error);
+        mView.onError(content);
     }
 }

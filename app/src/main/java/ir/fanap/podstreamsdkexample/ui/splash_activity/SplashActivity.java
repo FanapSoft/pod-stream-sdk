@@ -3,6 +3,7 @@ package ir.fanap.podstreamsdkexample.ui.splash_activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -47,6 +48,12 @@ public class SplashActivity extends AppCompatActivity implements SplashConstract
             finish();
         }
 
+    }
+
+    @Override
+    public void onError(String error) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+        txt_state.setText(error);
     }
 
 }
