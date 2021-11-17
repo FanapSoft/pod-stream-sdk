@@ -53,7 +53,7 @@ android {
 dependencies {
 //    embed fileTree(dir: 'libs', include: '*.aar')
     implementation 'androidx.appcompat:appcompat:1.3.1'
-    embed(name: 'kafkaAdapter', ext: 'aar')
+    implementation(name: 'kafkaAdapter', ext: 'aar')
 //    implementation files('libs/kafkaAdapter.aar')
 //    implementation project('offlinestream/libs/kafkaAdapter.aar')
 

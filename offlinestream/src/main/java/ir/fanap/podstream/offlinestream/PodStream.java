@@ -99,7 +99,7 @@ public class PodStream implements KafkaDataProvider.Listener {
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.mainserver);
+        End_Point_Base = mContext.getString(R.string.localserver);
     }
 
     /**
