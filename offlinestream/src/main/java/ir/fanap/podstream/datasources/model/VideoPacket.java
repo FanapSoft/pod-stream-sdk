@@ -2,26 +2,24 @@ package ir.fanap.podstream.datasources.model;
 
 public class VideoPacket {
     byte[] bytes;
-    long offset;
-    long length;
+    long start;
+    long end;
 
-    public VideoPacket(byte[] bytes, long offset, long length) {
+    public VideoPacket(byte[] bytes, long start, long end) {
         this.bytes = bytes;
-        this.offset = offset;
-        this.length = length;
+        this.start = start;
+        this.end = end;
     }
 
     public byte[] getBytes() {
         return bytes;
     }
 
-    public long getOffset() {
-        return offset;
+    public long getStart() {
+        return start;
     }
 
-    public long getLength() {
-        return length;
+    public long getEnd() {
+        return end;
     }
-
-
 }

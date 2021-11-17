@@ -84,7 +84,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
     public ProgressiveDataSource(DataProvider provider) {
         super(/* isNetwork= */ false);
         this.provider = provider;
-        this.filmLength = this.provider.fileSize;
+        this.filmLength = this.provider.getFileSize();
         if (filmLength == 0)
             filmLength = 10000;
     }
@@ -118,12 +118,12 @@ public final class ProgressiveDataSource extends BaseDataSource {
             return C.RESULT_END_OF_INPUT;
         }
         readLength = (int) Math.min(readLength, bytesRemaining);
-        try {
-            byte[] mainbuffer = provider.getBuffer(readPosition, readLength);
-            System.arraycopy(mainbuffer, (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
-        } catch (Exception ignored) {
-
-        }
+//        try {
+////            byte[] mainbuffer = provider.getBuffer(readPosition, readLength);
+////            System.arraycopy(mainbuffer, (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+////        } catch (Exception ignored) {
+//
+//        }
         readPosition += readLength;
         bytesRemaining -= readLength;
         return readLength;

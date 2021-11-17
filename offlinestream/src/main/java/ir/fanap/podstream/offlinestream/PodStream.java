@@ -28,8 +28,6 @@ import com.google.gson.GsonBuilder;
 
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.datasources.DataProvider;
-import ir.fanap.podstream.datasources.FileDataSource;
-import ir.fanap.podstream.datasources.KafkaDataProvider;
 import ir.fanap.podstream.datasources.ProgressiveDataSource;
 import ir.fanap.podstream.entity.ErrorOutPut;
 import ir.fanap.podstream.entity.FileSetup;
@@ -40,7 +38,6 @@ import ir.fanap.podstream.util.PodThreadManager;
 import ir.fanap.podstream.util.ssl.SSLHelper;
 import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
-import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
 import ir.fanap.podstream.util.HandlerMessageType.ActConstants;
 
@@ -301,7 +298,7 @@ public class PodStream implements DataProvider.Listener {
                 player = null;
             }
 
-            provider.endBufferManagerTask();
+
         } catch (Exception e) {
         }
     }
@@ -311,7 +308,7 @@ public class PodStream implements DataProvider.Listener {
      **/
     public void clean() {
         releasePlayerResource();
-        provider.endBufferManagerTask();
+
         instance = null;
         isReady = false;
     }
@@ -322,24 +319,24 @@ public class PodStream implements DataProvider.Listener {
         listener.onStreamerReady(state);
     }
 
-    @Override
-    public void onFileReady() {
-        fileReadyToPlay();
-    }
-
-    @Override
-    public void onTimeOut() {
-        errorHandle(Constants.TimeOutStreamer, "StreamerTimeOut");
-        if (player != null) {
-            refreshStreaming(currentFile);
-        }
-    }
+//    @Override
+//    public void onFileReady() {
+//        fileReadyToPlay();
+//    }
+//
+//    @Override
+//    public void onTimeOut() {
+//        errorHandle(Constants.TimeOutStreamer, "StreamerTimeOut");
+//        if (player != null) {
+//            refreshStreaming(currentFile);
+//        }
+//    }
 
     @Override
     public void onError(int code, String message) {
         errorHandle(Constants.StreamerError, message);
         if (player != null) {
-            provider.endBufferManagerTask();
+
             refreshStreaming(currentFile);
         }
     }
