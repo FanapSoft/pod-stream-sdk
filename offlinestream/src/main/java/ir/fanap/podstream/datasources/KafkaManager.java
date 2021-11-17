@@ -11,7 +11,10 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 
+import ir.fanap.podstream.entity.FileSetup;
+import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.offlinestream.PodStream;
+import ir.fanap.podstream.util.Constants;
 import ir.fanap.podstream.util.TimeOutUtils;
 import ir.fanap.podstream.util.Utils;
 
@@ -92,6 +95,29 @@ public class KafkaManager {
         cancelTimeOutSchedule(timeOutObg);
     }
 
+//
+//    public void prepareDashFileForPlay(FileSetup file, String Token) {
+//        this.dashFile = new DashResponse();
+//        timeOutObg = startTimeOutSchedule(Constants.DefaultTimeOut);
+//        sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_INFORMATION, file.getVideoAddress() + "," + Token);
+//        String key = "-1";
+//        while (!key.startsWith("5")) {
+//            ConsumResult cr = consumerClient.consumingWithKey(100);
+//            key = new String(cr.getKey());
+//            long fileSize = Utils.byteArrayToLong(cr.getValue());
+//            this.dashFile.setSize(fileSize);
+//            if (streamerIsStoped)
+//                break;
+//        }
+//        if (file.getVideoAddress().equals("296FF59BVT6M8OLW"))
+//            this.dashFile.setSize(147031744);
+//
+//        cancelTimeOutSchedule(timeOutObg);
+//        if (listener != null) {
+//            listener.onFileReady(this.dashFile);
+//        }
+//    }
+//
     public void connect(String brokerAddress, String sslPath, String consumTopic, String produceTopic, String token) {
         this.token = token;
         this.consumTopic = consumTopic;

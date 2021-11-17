@@ -36,6 +36,7 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
     KafkaManager kafkaManager;
     Thread producerThread;
     boolean streamIsStarted = false;
+    boolean cancelled = false;
     ByteArrayOutputStream output = null;
     boolean isWaitingForPacket = false;
     boolean isWaitingForUpdateBuffer = false;
@@ -68,16 +69,21 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
 
 
     public void startStreming(FileSetup file) {
+
         kafkaManager.produceFileSizeMessage(file.getVideoAddress(), new KafkaProcessHandler.ProccessHandler() {
             @Override
             public void onFileReady(long fileSize) {
+                if (cancelled) {
+                    cancelled = false;
+                    return;
+                }
                 streamIsStarted = true;
                 startUpdaterJob();
             }
 
             @Override
             public void onError(int code, String message) {
-                if (retryCount < 4) {
+                if (retryCount < 4 && !cancelled) {
                     Log.e("TAG", "onError:  retry" + retryCount);
                     retryCount++;
                     startStreming(file);
@@ -112,5 +118,6 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
         streamIsStarted = false;
         kafkaManager.produceCloseMessage();
         isWaitingForPacket = false;
+        cancelled = true;
     }
 }

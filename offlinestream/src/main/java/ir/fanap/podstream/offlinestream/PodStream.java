@@ -97,7 +97,7 @@ public class PodStream implements DataProvider.Listener {
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.mainserver);
+        End_Point_Base = mContext.getString(R.string.localserver);
     }
 
     /**
@@ -298,6 +298,7 @@ public class PodStream implements DataProvider.Listener {
                 player = null;
             }
 
+            provider.endStreaming();
 
         } catch (Exception e) {
         }
@@ -308,7 +309,7 @@ public class PodStream implements DataProvider.Listener {
      **/
     public void clean() {
         releasePlayerResource();
-
+        provider.endStreaming();
         instance = null;
         isReady = false;
     }
@@ -336,7 +337,6 @@ public class PodStream implements DataProvider.Listener {
     public void onError(int code, String message) {
         errorHandle(Constants.StreamerError, message);
         if (player != null) {
-
             refreshStreaming(currentFile);
         }
     }
