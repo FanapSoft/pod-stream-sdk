@@ -50,22 +50,6 @@ public class VideoListActivity extends AppCompatActivity implements VideoListCon
         videoListAdaper.addVideo(new VideoItem(videoName, videoHash, "320", "0"));
     }
 
-    private void test() {
-        Log.e("TAG1", "start ");
-        CountDownTimer timer = new CountDownTimer(20000, 5000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                Log.e("TAG1", "hello ");
-            }
-
-            @Override
-            public void onFinish() {
-                Log.e("TAG1", "done ");
-            }
-        };
-        timer.start();
-    }
-
     private void initviews() {
         btn_add = findViewById(R.id.btn_add);
         edt_name = findViewById(R.id.edt_name);

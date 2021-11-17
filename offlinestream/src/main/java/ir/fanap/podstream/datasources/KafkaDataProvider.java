@@ -148,7 +148,7 @@ public class KafkaDataProvider {
     // TODO Can be better
     // timeout system can be improve
     private Object startTimeOutSchedule(int delayTime) {
-        Log.e(PodStream.TAG, "ping !");
+//        Log.e(PodStream.TAG, "ping !");
         streamerIsStoped = false;
         return TimeOutUtils.setTimeout(() -> {
             streamerIsStoped = true;
@@ -158,7 +158,7 @@ public class KafkaDataProvider {
     }
 
     private void cancelTimeOutSchedule(@NotNull Object tid) {
-        Log.e(PodStream.TAG, "pong !");
+//        Log.e(PodStream.TAG, "pong !");
         TimeOutUtils.clearTimeout(tid);
         timeOutObg = null;
     }

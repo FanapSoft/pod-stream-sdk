@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
 }
 ext {
-    SdkVersion = "1.1.2"
+    SdkVersion = "1.1.8"
 }
 android {
     compileSdkVersion 30
@@ -40,8 +40,8 @@ android {
         testImplementation 'junit:junit:4.13.2'
         androidTestImplementation 'androidx.test.ext:junit:1.1.3'
         androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-//        implementation "com.github.FanapSoft:offlinestreamsdk:$SdkVersion"
-      implementation project(path: ':offlinestream')
+        implementation "com.github.FanapSoft:offlinestreamsdk:$SdkVersion"
+//        implementation project(path: ':offlinestream')
 //      implementation (name: 'offlinestream-release', ext: 'aar'){
 //          transitive=true
 //      }

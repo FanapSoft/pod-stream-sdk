@@ -294,7 +294,6 @@ public class PodStream implements KafkaDataProvider.Listener {
                 playWhenReady = player.getPlayWhenReady();
                 currentWindow = player.getCurrentWindowIndex();
                 playbackPosition = player.getCurrentPosition();
-                Log.e("'TAG'", "releasePlayer: " + playWhenReady + "   --->   " + currentWindow + "   --->   " + "   --->   " + playbackPosition);
                 player.release();
                 player = null;
             }
