@@ -21,8 +21,8 @@ import ir.fanap.podstream.util.Utils;
 public class KafkaManager {
 
     boolean isConnect = false;
-    long start = 0;
-    long end = 2000;
+    long offset = 0;
+    long length = Constants.DefaultLengthValue;
     long fileSize = 0;
     boolean isEndOfFile = false;
     private final long KAFKA_MEESSAGE_GET_FILE_INFORMATION = -5;
@@ -54,16 +54,34 @@ public class KafkaManager {
         if (isEndOfFile) {
             listener.onStreamEnd();
         }
-        listener.onFileBytes(new byte[10]);
-        start = (start + end) + 1;
-        if ((start + end) > fileSize) {
-            end = fileSize - start;
+
+        timeOutObg = startTimeOutSchedule(10000);
+        produceMessage(KAFKA_MEESSAGE_GET_FILE_BYTE, offset + "," + length);
+
+        byte[] data = null;
+        while (data == null || data.length < length) {
+            data = this.consumerClient.consumingWithKey(100).getValue();
+            if (hasError)
+                break;
+        }
+
+        if (hasError) {
+            listener.onError(0, "time out");
+            return;
+        } else
+            listener.onFileBytes(data, offset, (offset + length));
+
+        cancelTimeOutSchedule(timeOutObg);
+
+        offset = (offset + length) + 1;
+        if ((offset + length) > fileSize) {
+            length = fileSize - offset;
             isEndOfFile = true;
         }
     }
 
     public void changeStartOffset(long start) {
-        this.start = start;
+        this.offset = start;
     }
 
     public void produceCloseMessage() {
@@ -77,7 +95,7 @@ public class KafkaManager {
         }
         timeOutObg = startTimeOutSchedule(10000);
 
-        produceMessage(KAFKA_MEESSAGE_GET_FILE_INFORMATION, hash + "," + token);
+        produceMessage(KAFKA_MEESSAGE_GET_FILE_INFORMATION, hash);
         String key = "-1";
         while (!key.startsWith("5")) {
             ConsumResult cr = consumerClient.consumingWithKey(100);
@@ -95,29 +113,6 @@ public class KafkaManager {
         cancelTimeOutSchedule(timeOutObg);
     }
 
-//
-//    public void prepareDashFileForPlay(FileSetup file, String Token) {
-//        this.dashFile = new DashResponse();
-//        timeOutObg = startTimeOutSchedule(Constants.DefaultTimeOut);
-//        sendMessageToKafka(KAFKA_MEESSAGE_GET_FILE_INFORMATION, file.getVideoAddress() + "," + Token);
-//        String key = "-1";
-//        while (!key.startsWith("5")) {
-//            ConsumResult cr = consumerClient.consumingWithKey(100);
-//            key = new String(cr.getKey());
-//            long fileSize = Utils.byteArrayToLong(cr.getValue());
-//            this.dashFile.setSize(fileSize);
-//            if (streamerIsStoped)
-//                break;
-//        }
-//        if (file.getVideoAddress().equals("296FF59BVT6M8OLW"))
-//            this.dashFile.setSize(147031744);
-//
-//        cancelTimeOutSchedule(timeOutObg);
-//        if (listener != null) {
-//            listener.onFileReady(this.dashFile);
-//        }
-//    }
-//
     public void connect(String brokerAddress, String sslPath, String consumTopic, String produceTopic, String token) {
         this.token = token;
         this.consumTopic = consumTopic;
@@ -152,9 +147,9 @@ public class KafkaManager {
         produceCloseMessage();
     }
 
-    private void reset() {
-        start = 0;
-        end = 2000;
+    public void reset() {
+        offset = 0;
+        length = 2000;
     }
 
     // timeout system can be improve

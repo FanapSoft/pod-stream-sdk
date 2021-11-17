@@ -1,14 +1,16 @@
 package ir.fanap.podstream.datasources.buffer;
 
 
+import android.util.Log;
+
 import java.util.Stack;
+
 import ir.fanap.podstream.datasources.model.VideoPacket;
 import ir.fanap.podstream.util.Constants;
 
 public class BufferManager {
     private long startBuffer = 0;
-    private long endBuffer = Constants.DEAFULT_BUFFER_LENGTH;
-    private VideoPacket lastPacket;
+    private long endBuffer = 0;
     private Stack<VideoPacket> buffer;
     private VideoPacket currentPacket;
 
@@ -17,15 +19,15 @@ public class BufferManager {
     }
 
     public boolean existInBuffer(long offset, long length) {
-        return (offset >= startBuffer && (offset + length) <= endBuffer);
+        return !buffer.empty() && (offset >= startBuffer && (offset + length) <= endBuffer);
     }
 
     public boolean needsUpdate() {
-        return (buffer.size() <= 10);
+        return (buffer.size() < 10);
     }
 
     public boolean existInCurrent(long offset, long length) {
-        return (offset >= currentPacket.getStart() && (offset + length) <= (currentPacket.getStart() + currentPacket.getStart()));
+        return (currentPacket != null) && (offset >= currentPacket.getStart() && offset + length <= currentPacket.getEnd());
     }
 
     public boolean existInCurrentAndNext(long offset, long length) {
@@ -33,8 +35,13 @@ public class BufferManager {
     }
 
     public void addToBuffer(VideoPacket packet) {
-        lastPacket = packet;
         buffer.push(packet);
+        endBuffer = packet.getEnd();
+        Log.e("buffer", "endBuffer  " + endBuffer);
+    }
+
+    public boolean checkEnoughBuffered() {
+        return buffer.size() > 5;
     }
 
     public VideoPacket getCurrentPacket() {
@@ -48,7 +55,9 @@ public class BufferManager {
     public void changeCurrentPacket() {
         if (buffer.empty())
             return;
-        currentPacket = buffer.pop();
+        currentPacket = buffer.firstElement();
+        buffer.remove(0);
+//        Log.e("buffer", "change  " + currentPacket.getStart() + "  " + currentPacket.getEnd());
     }
 
     public void resetBuffer(long offset, long length) {

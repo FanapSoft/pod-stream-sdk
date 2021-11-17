@@ -97,7 +97,7 @@ public class PodStream implements DataProvider.Listener {
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.localserver);
+        End_Point_Base = mContext.getString(R.string.mainserver);
     }
 
     /**
@@ -296,9 +296,10 @@ public class PodStream implements DataProvider.Listener {
                 Log.e("'TAG'", "releasePlayer: " + playWhenReady + "   --->   " + currentWindow + "   --->   " + "   --->   " + playbackPosition);
                 player.release();
                 player = null;
+                provider.endStreaming();
             }
 
-            provider.endStreaming();
+
 
         } catch (Exception e) {
         }
@@ -309,7 +310,7 @@ public class PodStream implements DataProvider.Listener {
      **/
     public void clean() {
         releasePlayerResource();
-        provider.endStreaming();
+        provider.close();
         instance = null;
         isReady = false;
     }
@@ -320,6 +321,10 @@ public class PodStream implements DataProvider.Listener {
         listener.onStreamerReady(state);
     }
 
+    @Override
+    public void onStart() {
+        fileReadyToPlay();
+    }
 //    @Override
 //    public void onFileReady() {
 //        fileReadyToPlay();

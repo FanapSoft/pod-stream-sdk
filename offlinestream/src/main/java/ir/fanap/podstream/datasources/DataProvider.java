@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Stack;
 
+import ir.fanap.podstream.datasources.buffer.BufferManager;
 import ir.fanap.podstream.datasources.model.VideoPacket;
 import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.network.response.DashResponse;
@@ -29,11 +30,14 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
         void onStreamerIsReady(boolean state);
 
         void onError(int code, String message);
+
+        void onStart();
     }
 
     String token;
     Listener listener;
     KafkaManager kafkaManager;
+    private BufferManager bufferManager;
     Thread producerThread;
     boolean streamIsStarted = false;
     boolean cancelled = false;
@@ -42,11 +46,15 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
     boolean isWaitingForUpdateBuffer = false;
     int retryCount = 0;
 
+    private long offsetBuffer;
+    private long endOfBuffer;
+
     public DataProvider(TopicResponse kafkaConfigs, String token, Listener listener) {
         this.listener = listener;
         this.token = token;
         kafkaManager = new KafkaManager(this);
-        kafkaManager.connect(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath(), kafkaConfigs.getControlTopic(), kafkaConfigs.getStreamTopic(), token);
+        bufferManager = new BufferManager();
+        kafkaManager.connect(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath(), kafkaConfigs.getStreamTopic(), kafkaConfigs.getControlTopic(), token);
     }
 
     @Override
@@ -69,7 +77,6 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
 
 
     public void startStreming(FileSetup file) {
-
         kafkaManager.produceFileSizeMessage(file.getVideoAddress(), new KafkaProcessHandler.ProccessHandler() {
             @Override
             public void onFileReady(long fileSize) {
@@ -79,6 +86,7 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
                 }
                 streamIsStarted = true;
                 startUpdaterJob();
+                listener.onStart();
             }
 
             @Override
@@ -102,8 +110,11 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
                 //TODO update buffer in here
                 while (streamIsStarted) {
                     try {
-                        Thread.sleep(3000);
-                        Log.e("TAG", "run: ");
+                        if (bufferManager.needsUpdate() && !isWaitingForPacket) {
+                            isWaitingForPacket = true;
+                            getNextChank();
+                        }
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -114,10 +125,86 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
         producerThread.start();
     }
 
+    private void getNextChank() {
+        kafkaManager.produceNextChankMessage(new KafkaProcessHandler.ProccessHandler() {
+            @Override
+            public void onFileBytes(byte[] bytes, long start, long end) {
+
+                VideoPacket packet = new VideoPacket(bytes, start, end);
+                bufferManager.addToBuffer(packet);
+                isWaitingForPacket = false;
+                if (isWaitingForUpdateBuffer && bufferManager.checkEnoughBuffered())
+                    isWaitingForUpdateBuffer = false;
+            }
+
+            @Override
+            public void onStreamEnd() {
+                streamIsStarted = false;
+                isWaitingForPacket = true;
+            }
+
+            @Override
+            public void onError(int code, String message) {
+
+            }
+        });
+    }
+
+
+    public long getOffsetMainBuffer() {
+        return endOfBuffer;
+    }
+
+    int count = 0;
+
+    public byte[] getBuffer(long offset, long length) throws Exception {
+        if (count < 100) {
+            Log.e("buffer", "offset: " + offset + "length : " + length);
+            count++;
+        }
+        output = new ByteArrayOutputStream();
+        while (true) {
+            if (!bufferManager.existInBuffer(offset, length)) {
+                if (!isWaitingForUpdateBuffer) {
+                    isWaitingForUpdateBuffer = true;
+                    bufferManager.resetBuffer(offset, length);
+                    kafkaManager.changeStartOffset(offset);
+                    Thread.sleep(3000);
+                }
+                continue;
+            }
+
+            if (!bufferManager.existInCurrent(offset, length)) {
+                bufferManager.changeCurrentPacket();
+                continue;
+            }
+
+            if (bufferManager.existInCurrent(offset, length)) {
+                output.write(bufferManager.getCurrentPacket().getBytes());
+                break;
+            }
+
+            if (bufferManager.existInCurrentAndNext(offset, length)) {
+                output.write(bufferManager.getCurrentPacket().getBytes());
+                offset = bufferManager.getNextOffset();
+                bufferManager.changeCurrentPacket();
+                continue;
+            }
+        }
+        offsetBuffer = offset;
+        endOfBuffer = offset + (length - 1);
+        return output.toByteArray();
+    }
+
     public void endStreaming() {
         streamIsStarted = false;
-        kafkaManager.produceCloseMessage();
         isWaitingForPacket = false;
         cancelled = true;
+        kafkaManager.reset();
+    }
+
+    public void close() {
+        endStreaming();
+        kafkaManager.produceCloseMessage();
     }
 }
