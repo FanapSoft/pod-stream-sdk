@@ -38,7 +38,7 @@ public class Repository {
 
     // 0 == local  , 1 == main  ,  2 == sandbox
     public List<VideoItem> getVideo() {
-        if (server == 1)
+        if (server == 0)
             return Utils.getLocalVideoList(activity);
         else if (server == 2)
             return Utils.getSandBoxVideoList(activity);

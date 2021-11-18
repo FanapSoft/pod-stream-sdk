@@ -120,7 +120,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
         readLength = (int) Math.min(readLength, bytesRemaining);
         try {
             byte[] mainbuffer = provider.getBuffer(readPosition, readLength);
-            System.arraycopy(mainbuffer, (int) (readPosition - provider.getOffsetMainBuffer()), buffer, offset, readLength);
+            System.arraycopy(mainbuffer, (int) (readPosition - provider.getStartBuffer()), buffer, offset, readLength);
         } catch (Exception ignored) {
 
         }

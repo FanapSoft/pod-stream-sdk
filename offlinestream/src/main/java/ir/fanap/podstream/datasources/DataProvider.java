@@ -41,7 +41,7 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
     boolean cancelled = false;
     ByteArrayOutputStream output = null;
     int retryCount = 0;
-    private long endOfBuffer;
+    private long startBuffer;
 
     public DataProvider(TopicResponse kafkaConfigs, String token, Listener listener) {
         this.listener = listener;
@@ -76,7 +76,7 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
                     cancelled = false;
                     return;
                 }
-                bufferManager.run();
+                bufferManager.startUpdaterJob();
                 listener.onStart();
             }
 
@@ -94,18 +94,16 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
         });
     }
 
-    public long getOffsetMainBuffer() {
-        return endOfBuffer;
+    public long getStartBuffer() {
+        return startBuffer;
     }
 
 
     public byte[] getBuffer(long offset, long length) throws Exception {
         output = new ByteArrayOutputStream();
-
         while (true) {
             if (!bufferManager.existInBuffer(offset, length)) {
-                    bufferManager.resetBuffer(offset, length);
-                    kafkaManager.changeStartOffset(offset);
+                    bufferManager.resetBuffer(offset);
                 continue;
             }
 
@@ -126,13 +124,14 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
                 continue;
             }
         }
-        endOfBuffer = offset + (length - 1);
+        startBuffer = offset + (length - 1);
         return output.toByteArray();
     }
 
     public void endStreaming() {
         cancelled = true;
         kafkaManager.reset();
+        bufferManager.release();
     }
 
     public void close() {
