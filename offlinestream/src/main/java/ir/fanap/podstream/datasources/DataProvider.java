@@ -41,7 +41,6 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
     boolean cancelled = false;
     ByteArrayOutputStream output = null;
     int retryCount = 0;
-    private long startBuffer;
 
     public DataProvider(TopicResponse kafkaConfigs, String token, Listener listener) {
         this.listener = listener;
@@ -94,11 +93,6 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
         });
     }
 
-    public long getStartBuffer() {
-        return startBuffer;
-    }
-
-
     public byte[] getBuffer(long offset, long length) throws Exception {
         output = new ByteArrayOutputStream();
         while (true) {
@@ -124,7 +118,7 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
                 continue;
             }
         }
-        startBuffer = offset + (length - 1);
+
         return output.toByteArray();
     }
 
