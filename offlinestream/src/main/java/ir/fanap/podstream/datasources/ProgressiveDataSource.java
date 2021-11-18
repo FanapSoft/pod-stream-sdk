@@ -143,7 +143,6 @@ public final class ProgressiveDataSource extends BaseDataSource {
         ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
         buffers.putLong(-2);
         try {
-
             if (file != null) {
                 file.close();
             }

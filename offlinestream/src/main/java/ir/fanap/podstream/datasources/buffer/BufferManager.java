@@ -5,21 +5,46 @@ import android.util.Log;
 
 import java.util.Stack;
 
+import ir.fanap.podstream.datasources.KafkaManager;
+import ir.fanap.podstream.datasources.KafkaProcessHandler;
 import ir.fanap.podstream.datasources.model.VideoPacket;
+import ir.fanap.podstream.network.response.TopicResponse;
 import ir.fanap.podstream.util.Constants;
 
-public class BufferManager {
+public class BufferManager extends Thread {
     private long startBuffer = 0;
     private long endBuffer = 0;
     private Stack<VideoPacket> buffer;
     private VideoPacket currentPacket;
+    KafkaManager kafkaManager;
+    boolean isWaitingForPacket = false;
+    boolean streamIsStarted = false;
 
-    public BufferManager() {
+    public BufferManager(KafkaManager kafkaManager) {
         buffer = new Stack<>();
+        this.kafkaManager = kafkaManager;
     }
 
     public boolean existInBuffer(long offset, long length) {
         return !buffer.empty() && (offset >= startBuffer && (offset + length) <= endBuffer);
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        streamIsStarted = true;
+        while (streamIsStarted) {
+            try {
+                if (needsUpdate() && !isWaitingForPacket) {
+                    isWaitingForPacket = true;
+                    getNextChank();
+                }
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     public boolean needsUpdate() {
@@ -40,10 +65,6 @@ public class BufferManager {
         Log.e("buffer", "endBuffer  " + endBuffer);
     }
 
-    public boolean checkEnoughBuffered() {
-        return buffer.size() > 5;
-    }
-
     public VideoPacket getCurrentPacket() {
         return currentPacket;
     }
@@ -57,13 +78,37 @@ public class BufferManager {
             return;
         currentPacket = buffer.firstElement();
         buffer.remove(0);
-//        Log.e("buffer", "change  " + currentPacket.getStart() + "  " + currentPacket.getEnd());
     }
 
     public void resetBuffer(long offset, long length) {
+        streamIsStarted = false;
         buffer.clear();
         startBuffer = offset;
-        endBuffer = Constants.DEAFULT_BUFFER_LENGTH;
+        endBuffer = 0;
         currentPacket = null;
+        run();
     }
+
+    private void getNextChank() {
+        kafkaManager.produceNextChankMessage(new KafkaProcessHandler.ProccessHandler() {
+            @Override
+            public void onFileBytes(byte[] bytes, long start, long end) {
+                VideoPacket packet = new VideoPacket(bytes, start, end);
+                addToBuffer(packet);
+                isWaitingForPacket = false;
+            }
+
+            @Override
+            public void onStreamEnd() {
+                isWaitingForPacket = true;
+            }
+
+            @Override
+            public void onError(int code, String message) {
+
+            }
+        });
+    }
+
+
 }
