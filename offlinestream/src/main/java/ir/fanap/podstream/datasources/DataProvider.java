@@ -39,7 +39,7 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
     KafkaManager kafkaManager;
     private BufferManager bufferManager;
     boolean cancelled = false;
-    ByteArrayOutputStream output = null;
+
     int retryCount = 0;
 
     public DataProvider(TopicResponse kafkaConfigs, String token, Listener listener) {
@@ -93,11 +93,13 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
         });
     }
 
+    private long readPosition;
+
     public byte[] getBuffer(long offset, long length) throws Exception {
-        output = new ByteArrayOutputStream();
+        byte[] result = new byte[(int) length];
         while (true) {
             if (!bufferManager.existInBuffer(offset, length)) {
-                    bufferManager.resetBuffer(offset);
+                bufferManager.resetBuffer(offset);
                 continue;
             }
 
@@ -107,19 +109,19 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
             }
 
             if (bufferManager.existInCurrent(offset, length)) {
-                output.write(bufferManager.getCurrentPacket().getBytes());
+                System.arraycopy(bufferManager.getCurrentPacket().getBytes(), (int) (readPosition - offset), result, (int) offset, (int) length);
                 break;
             }
 
             if (bufferManager.existInCurrentAndNext(offset, length)) {
-                output.write(bufferManager.getCurrentPacket().getBytes());
+                System.arraycopy(bufferManager.getCurrentPacket().getBytes(), (int) (readPosition - offset), result, (int) offset, (int) length);
                 offset = bufferManager.getNextOffset();
                 bufferManager.changeCurrentPacket();
                 continue;
             }
         }
-
-        return output.toByteArray();
+        readPosition += length;
+        return result;
     }
 
     public void endStreaming() {
