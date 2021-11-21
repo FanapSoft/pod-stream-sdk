@@ -7,9 +7,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.kafkassl.kafkaclient.ConsumResult;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -26,25 +28,31 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.nio.ByteBuffer;
+
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.datasources.DataProvider;
 import ir.fanap.podstream.datasources.ProgressiveDataSource;
 import ir.fanap.podstream.datasources.buffer.EventListener;
-import ir.fanap.podstream.entity.ErrorOutPut;
-import ir.fanap.podstream.entity.FileSetup;
+import ir.fanap.podstream.kafka.KafkaClient;
+import ir.fanap.podstream.kafka.KafkaClientManager;
+import ir.fanap.podstream.model.ErrorOutPut;
+import ir.fanap.podstream.model.FileSetup;
 import ir.fanap.podstream.R;
 import ir.fanap.podstream.util.Constants;
 import ir.fanap.podstream.util.LogTypes;
 import ir.fanap.podstream.util.PodThreadManager;
+import ir.fanap.podstream.util.Utils;
 import ir.fanap.podstream.util.ssl.SSLHelper;
 import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
 import ir.fanap.podstream.network.response.TopicResponse;
 import ir.fanap.podstream.util.HandlerMessageType.ActConstants;
 
-public class PodStream implements  EventListener.ProviderListener {
+public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSource.DataSourceListener {
 
     public static String TAG = "PodStream";
+    public static String KAFKALISTENERKEY = "main";
     @SuppressLint("StaticFieldLeak")
     private static PodStream instance;
     private StreamListener listener;
@@ -54,15 +62,14 @@ public class PodStream implements  EventListener.ProviderListener {
     private AppApi api;
     public String token;
     private boolean isReady = false;
-    private ProgressiveDataSource.Factory dataSourceFactory;
-    private DataProvider provider;
-    private SSLHelper sslHelper;
     private String End_Point_Base;
     private int backBufferSize = 60000;
     private Activity mContext;
     protected Gson gson;
-    private FileSetup currentFile = null;
-
+    KafkaClientManager kafkaManager;
+    private boolean playWhenReady = true;
+    private int currentWindow = 0;
+    private long playbackPosition = 0L;
 
     private PodStream() {
 
@@ -73,32 +80,19 @@ public class PodStream implements  EventListener.ProviderListener {
             instance = new PodStream();
             instance.setServer(activity);
             instance.setContext(activity);
-            instance.initSslHelper(activity);
             instance.netWorkInit();
+            instance.kafkaManager = KafkaClientManager.getInstance(new SSLHelper(activity));
             instance.gson = new GsonBuilder().setPrettyPrinting().create();
         }
         return instance;
     }
 
-
     public void setContext(Activity mContext) {
         this.mContext = mContext;
     }
 
-    private void initSslHelper(Activity mContext) {
-        if (sslHelper != null) {
-            return;
-        }
-        sslHelper = new SSLHelper();
-        try {
-            sslHelper.generateFile(Constants.CERT_FILE, mContext);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.mainserver);
+        End_Point_Base = mContext.getString(R.string.localserver);
     }
 
     /**
@@ -106,17 +100,13 @@ public class PodStream implements  EventListener.ProviderListener {
      **/
     public void setToken(String token) {
         this.token = token;
+        kafkaManager.setToken(token);
         prepareTopic();
     }
 
     public void setBackBufferSize(int bufferSize) {
         this.backBufferSize = bufferSize;
     }
-
-
-    private boolean playWhenReady = true;
-    private int currentWindow = 0;
-    private long playbackPosition = 0L;
 
     private void initPlayer(Activity activity) {
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
@@ -167,14 +157,12 @@ public class PodStream implements  EventListener.ProviderListener {
         return End_Point_Base + "getTopic/?clientId=" + token;
     }
 
-
     private void prepareTopic() {
         api.getTopics(getTopicUrl())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(response -> {
-                            response.setsslPath(sslHelper.getCart().getAbsolutePath());
-                            connectKafkaProvider(response);
+                            connectKafkaProvider(response.getKafkaConcumerClient(), response.getKafkaProducerClient());
                         },
                         throwable -> {
                             ShowLog(LogTypes.ERROR, throwable.getMessage());
@@ -183,8 +171,14 @@ public class PodStream implements  EventListener.ProviderListener {
                         });
     }
 
-    private void connectKafkaProvider(TopicResponse kafkaConfigs) {
-        provider = new DataProvider(kafkaConfigs, token, this);
+    private void connectKafkaProvider(KafkaClient consumerClient, KafkaClient producerClient) {
+        kafkaManager.createProducer(producerClient);
+        kafkaManager.createConsumer(consumerClient);
+        kafkaManager.setListener(KAFKALISTENERKEY, this);
+        kafkaManager.connectProducer();
+        kafkaManager.connectConsumer();
+        listener.onStreamerReady(true);
+        isReady = true;
     }
 
     private void ShowLog(String logType, String message) {
@@ -210,18 +204,10 @@ public class PodStream implements  EventListener.ProviderListener {
 
     public void prepareStreaming(FileSetup file) {
         if (checkRequireds()) {
-            currentFile = file;
-            new PodThreadManager().doThisAndGo(() -> provider.startStreaming(file));
+            kafkaManager.consume();
+            kafkaManager.produceFileSizeMessage(file.getVideoAddress());
         }
     }
-
-
-    private void refreshStreaming(FileSetup file) {
-        if (checkRequireds()) {
-            new PodThreadManager().doThisAndGo(() -> provider.startStreaming(file));
-        }
-    }
-
 
     private boolean checkRequireds() {
         if (!isReady) {
@@ -237,11 +223,11 @@ public class PodStream implements  EventListener.ProviderListener {
         return true;
     }
 
-    private void fileReadyToPlay() {
+    private void fileReadyToPlay(long fileSize) {
         if (checkRequireds()) {
             releasePlayerResource();
             preparePlayer();
-            mHandler.obtainMessage(ActConstants.MESSAGE_PLAYER_PREAPARE_TO_PLAY, "start to streaming !!!").sendToTarget();
+            mHandler.obtainMessage(ActConstants.MESSAGE_PLAYER_PREAPARE_TO_PLAY, fileSize).sendToTarget();
         } else {
             ShowLog("player", "Not Ready");
         }
@@ -251,12 +237,12 @@ public class PodStream implements  EventListener.ProviderListener {
 //        return new FileDataSource.Factory();
 //    }
 
-    private ProgressiveDataSource.Factory buildDataSourceFactory() {
-        return new ProgressiveDataSource.Factory(provider);
+    private ProgressiveDataSource.Factory buildDataSourceFactory(long fileSize) {
+        return new ProgressiveDataSource.Factory(fileSize).setDataSourcelistener(this);
     }
 
-    private MediaSource buildMediaSource() {
-        dataSourceFactory = buildDataSourceFactory();
+    private MediaSource buildMediaSource(long fileSize) {
+        ProgressiveDataSource.Factory dataSourceFactory = buildDataSourceFactory(fileSize);
         MediaItem mediaItem = new MediaItem.Builder()
                 .setUri(Uri.EMPTY)
                 .build();
@@ -285,6 +271,11 @@ public class PodStream implements  EventListener.ProviderListener {
         mHandler.obtainMessage(ActConstants.MESSAGE_PLAYER_RELEASE).sendToTarget();
     }
 
+    public void stopStreaming() {
+        if (kafkaManager.isStreaming())
+            kafkaManager.stopConsume();
+    }
+
     /**
      *
      **/
@@ -297,11 +288,7 @@ public class PodStream implements  EventListener.ProviderListener {
                 Log.e("'TAG'", "releasePlayer: " + playWhenReady + "   --->   " + currentWindow + "   --->   " + "   --->   " + playbackPosition);
                 player.release();
                 player = null;
-                provider.endStreaming();
             }
-
-
-
         } catch (Exception e) {
         }
     }
@@ -311,55 +298,10 @@ public class PodStream implements  EventListener.ProviderListener {
      **/
     public void clean() {
         releasePlayerResource();
-        provider.close();
+        kafkaManager.closeProducer();
+        kafkaManager.closeConsumer();
         instance = null;
         isReady = false;
-    }
-
-    @Override
-    public void providerIsReady(long filSize) {
-        fileReadyToPlay();
-    }
-
-    @Override
-    public void write(int[] data) {
-
-    }
-
-    @Override
-    public void isEnd(boolean isEnd) {
-
-    }
-
-    @Override
-    public void onStreamerIsReady(boolean state) {
-        isReady = state;
-        listener.onStreamerReady(state);
-    }
-
-    @Override
-    public void onStart() {
-        fileReadyToPlay();
-    }
-//    @Override
-//    public void onFileReady() {
-//        fileReadyToPlay();
-//    }
-//
-//    @Override
-//    public void onTimeOut() {
-//        errorHandle(Constants.TimeOutStreamer, "StreamerTimeOut");
-//        if (player != null) {
-//            refreshStreaming(currentFile);
-//        }
-//    }
-
-    @Override
-    public void onError(int code, String message) {
-        errorHandle(Constants.StreamerError, message);
-        if (player != null) {
-            refreshStreaming(currentFile);
-        }
     }
 
     //ExoPlayer instances must be accessed from a single application thread. For the vast majority of cases this should be the application’s main thread.
@@ -376,7 +318,7 @@ public class PodStream implements  EventListener.ProviderListener {
                     initPlayer(mContext);
                     break;
                 case ActConstants.MESSAGE_PLAYER_PREAPARE_TO_PLAY:
-                    MediaSource mediaSource = buildMediaSource();
+                    MediaSource mediaSource = buildMediaSource(Long.parseLong(message.obj.toString()));
                     if (player != null) {
                         player.addMediaSource(mediaSource);
                         player.setPlayWhenReady(playWhenReady);
@@ -398,5 +340,17 @@ public class PodStream implements  EventListener.ProviderListener {
             }
         }
     };
+
+    @Override
+    public void onFileReady(long fileSize) {
+        fileReadyToPlay(fileSize);
+        Log.e(TAG, "onFileReady: " + fileSize);
+    }
+
+    @Override
+    public void onError(int code, String error) {
+        Log.e(TAG, "onError: " + error);
+        errorHandle(Constants.StreamerError, error);
+    }
 }
 

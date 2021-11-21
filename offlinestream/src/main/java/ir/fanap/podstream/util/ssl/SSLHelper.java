@@ -9,9 +9,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import ir.fanap.podstream.util.Constants;
+
 public class SSLHelper {
     File cart;
-    public void generateFile(String sslCert,Context mContext) throws Exception {
+
+    public SSLHelper(Context context) {
+        try {
+            generateFile(Constants.CERT_FILE,context);
+        } catch (Exception e) {
+
+        }
+    }
+
+    public void generateFile(String sslCert, Context mContext) throws Exception {
 
         if (sslCert == null || sslCert.trim().isEmpty()) cart= null;
 

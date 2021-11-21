@@ -1,15 +1,10 @@
 package ir.fanap.podstream.datasources.buffer;
 
 import java.util.Stack;
-
-import ir.fanap.podstream.datasources.KafkaManager;
 import ir.fanap.podstream.datasources.model.VideoPacket;
 
-public class BufferManager implements EventListener.KafkaListener {
+public class BufferManager {
 
-
-    EventListener.BufferListener listener;
-    KafkaManager kafkaManager;
     Stack<VideoPacket> buffer;
     VideoPacket current;
 
@@ -18,25 +13,13 @@ public class BufferManager implements EventListener.KafkaListener {
     long fileSize;
     long bufferedSize;
     long readedPos;
-    boolean isReady = false;
 
-    public BufferManager(KafkaManager kafkaManager) {
-        this.kafkaManager = kafkaManager;
-        this.kafkaManager.setListener(this);
-    }
 
-    @Override
-    public void onFileReady(long filSize) {
-        fileSize = filSize;
-        remaning = filSize;
+    public void prepareBuffer(long fileSize) {
+        this.fileSize = fileSize;
+        remaning = fileSize;
         bufferedSize = 0;
-        isReady = true;
         initBuffer();
-        updateBuffer();
-        ((Runnable) () -> {
-            listener.fileReady(filSize);
-        }).run();
-
     }
 
     private void initBuffer() {
@@ -46,37 +29,13 @@ public class BufferManager implements EventListener.KafkaListener {
         readedPos = 0;
     }
 
-    public BufferManager setListener(EventListener.BufferListener listener) {
-        this.listener = listener;
-        return this;
-    }
 
-
-    @Override
-    public void write(VideoPacket packet) {
-        addToBuffer(packet);
-    }
-
-    @Override
-    public void isEnd(boolean isEnd) {
-        listener.isEnd(isEnd);
-        isReady = false;
-
-    }
-
-    public byte[] getData(long offset, long length) {
-        return checkBuffer(offset, length);
-    }
-
-
-    private byte[] checkBuffer(long offset, long length) {
+    public byte[] read(long offset, long length) {
         if ((offset + length) > fileSize)
             length = (int) (fileSize - readedPos);
         byte[] result = new byte[(int) length];
         int resultPosition = 0;
         while (true) {
-            if (!isReady)
-                break;
             if (existInBuffer(offset, length)) {
                 if (!existInCurrent(offset, length) && !partExistInCurrent(offset)) {
                     changeCurrent();
@@ -106,8 +65,6 @@ public class BufferManager implements EventListener.KafkaListener {
                 continue;
             }
         }
-
-//        ((Runnable) () -> listener.write(result)).run();
         return result;
     }
 
@@ -120,8 +77,12 @@ public class BufferManager implements EventListener.KafkaListener {
         buffer.clear();
     }
 
+    public boolean needsUpdate() {
+        return true;
+    }
+
     private boolean existInBuffer(long offset, long length) {
-        return (offset >= startBuffer && (offset + length) <= endBuffer);
+        return (buffer != null && offset >= startBuffer && (offset + length) <= endBuffer);
     }
 
     private boolean existInCurrent(long offset, long length) {
@@ -132,16 +93,6 @@ public class BufferManager implements EventListener.KafkaListener {
         return (current != null && offset >= current.getStart() && offset <= current.getEnd());
     }
 
-    private void updateBuffer() {
-        new Thread(() -> {
-            while (isReady) {
-                if (buffer.size() < 5) {
-                    kafkaManager.read(bufferedSize, 10);
-                }
-            }
-        }).start();
-    }
-
     private void changeCurrent() {
         if (buffer.isEmpty())
             return;
@@ -150,7 +101,7 @@ public class BufferManager implements EventListener.KafkaListener {
         startBuffer = current.getStart();
     }
 
-    private void addToBuffer(VideoPacket packet) {
+    public void addToBuffer(VideoPacket packet) {
         bufferedSize = packet.getEnd();
         if (current == null) {
             current = packet;
@@ -159,21 +110,12 @@ public class BufferManager implements EventListener.KafkaListener {
         buffer.push(packet);
     }
 
-    @Override
-    public void onConnect() {
-        listener.onConnect();
-    }
-
     private void removefromBufer(int index) {
         buffer.remove(index);
     }
 
 
     public void release() {
-//        streamIsStarted = false;
-//        threadEvent.signal();
-//        updaterEvant.signal();
-//        threadEvent = null;
-//        updaterEvant = null;
+
     }
 }

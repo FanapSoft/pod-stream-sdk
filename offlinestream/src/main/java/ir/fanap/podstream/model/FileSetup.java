@@ -1,4 +1,4 @@
-package ir.fanap.podstream.entity;
+package ir.fanap.podstream.model;
 
 
 import ir.fanap.podstream.network.response.AvoidObfuscate;

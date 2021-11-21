@@ -5,7 +5,7 @@ import android.os.Build;
 import android.util.Log;
 import androidx.annotation.RequiresApi;
 
-import ir.fanap.podstream.entity.ErrorOutPut;
+import ir.fanap.podstream.model.ErrorOutPut;
 import ir.fanap.podstream.offlinestream.PodStreamAdapter;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
 

@@ -7,9 +7,8 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.ui.PlayerView;
 
-import ir.fanap.podstream.entity.ErrorOutPut;
-import ir.fanap.podstream.entity.FileSetup;
-import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstream.model.ErrorOutPut;
+import ir.fanap.podstream.model.FileSetup;
 import ir.fanap.podstream.offlinestream.PodStream;
 import ir.fanap.podstream.offlinestream.PodStreamAdapter;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;
@@ -88,6 +87,7 @@ public class PlayerPresenter extends PodStreamAdapter implements PlayerConstract
 
     @Override
     public void destroy() {
+        offlinestreamer.stopStreaming();
         offlinestreamer.releasePlayerResource();
     }
 }

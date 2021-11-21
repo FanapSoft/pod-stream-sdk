@@ -1,9 +1,8 @@
 package ir.fanap.podstreamsdkexample.ui.splash_activity;
 
 import android.app.Activity;
-import android.widget.Toast;
 
-import ir.fanap.podstream.entity.ErrorOutPut;
+import ir.fanap.podstream.model.ErrorOutPut;
 import ir.fanap.podstream.offlinestream.PodStream;
 import ir.fanap.podstream.offlinestream.PodStreamAdapter;
 import ir.fanap.podstreamsdkexample.data.remote.Repository;

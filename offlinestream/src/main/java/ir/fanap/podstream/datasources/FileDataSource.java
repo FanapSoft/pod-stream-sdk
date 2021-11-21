@@ -70,7 +70,7 @@ public final class FileDataSource extends BaseDataSource {
     public FileDataSource createDataSource() {
 
       final File root = android.os.Environment.getExternalStorageDirectory();
-      byte[] videoBuffer = new byte[0];
+      byte[]  videoBuffer = new byte[0];
       for(int i=0;i<=0;i++){
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         if( i==0){

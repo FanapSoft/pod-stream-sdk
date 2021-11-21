@@ -1,4 +1,4 @@
-package ir.fanap.podstream.entity;
+package ir.fanap.podstream.model;
 
 public class ErrorOutPut {
     private String errorMessage;

@@ -3,6 +3,7 @@ package ir.fanap.podstream.datasources;
 
 import android.net.Uri;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -17,11 +18,16 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 
+import ir.fanap.podstream.datasources.buffer.EventListener;
+import ir.fanap.podstream.kafka.KafkaClientManager;
+
 
 /**
  * A {@link DataSource} for reading local files.
  */
 public final class ProgressiveDataSource extends BaseDataSource {
+    public interface DataSourceListener extends BaseListener {
+    }
 
     /**
      * Creates base data source.
@@ -39,10 +45,18 @@ public final class ProgressiveDataSource extends BaseDataSource {
     public static final class Factory implements DataSource.Factory {
         private TransferListener listener;
         private ProgressiveDataSource dataSource;
-        DataProvider provider;
+        KafkaClientManager kafkaManager;
+        DataSourceListener dalistener;
+        long fileSize;
 
-        public Factory(DataProvider provider) {
-            this.provider = provider;
+        public Factory(long fileSize) {
+            this.fileSize = fileSize;
+            this.kafkaManager = KafkaClientManager.getInstance(null);
+        }
+
+        public Factory setDataSourcelistener(DataSourceListener dalistener) {
+            this.dalistener = dalistener;
+            return this;
         }
 
         public ProgressiveDataSource getDataSource() {
@@ -60,7 +74,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
 
         @Override
         public ProgressiveDataSource createDataSource() {
-            dataSource = new ProgressiveDataSource(provider);
+            dataSource = new ProgressiveDataSource(new DataProvider(kafkaManager, fileSize), dalistener);
             if (listener != null) {
                 dataSource.addTransferListener(listener);
             }
@@ -77,11 +91,15 @@ public final class ProgressiveDataSource extends BaseDataSource {
     private long filmLength;
     private long readPosition;
     DataProvider provider;
+    DataSourceListener listener;
 
-    public ProgressiveDataSource(DataProvider provider) {
+
+    public ProgressiveDataSource(DataProvider provider, DataSourceListener listener) {
         super(/* isNetwork= */ false);
         this.provider = provider;
+        this.listener = listener;
         this.filmLength = this.provider.fileSize;
+
         if (filmLength == 0)
             filmLength = 10000;
     }
@@ -94,13 +112,11 @@ public final class ProgressiveDataSource extends BaseDataSource {
         readPosition = ((int) dataSpec.position);
         bytesRemaining = (int) (filmLength - (dataSpec.position));//2781222l
         if (bytesRemaining <= 0 || readPosition + bytesRemaining > filmLength) {
-            if (provider.getListener() != null && !errorReported) {
+            if (!errorReported) {
                 errorReported = true;
-                provider.getListener().onError(-1, "Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
+                listener.onError(-1, "Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
                         + "], length: " + filmLength);
             }
-//            throw new IOException("Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
-//                    + "], length: " + filmLength);
         }
 
         return bytesRemaining;
@@ -119,7 +135,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
             byte[] mainbuffer = provider.read(readPosition, readLength);
             System.arraycopy(mainbuffer, (int) (readPosition - offset), buffer, offset, readLength);
         } catch (Exception ignored) {
-
+            Log.e("TAG", "read: ");
         }
         readPosition += readLength;
         bytesRemaining -= readLength;

@@ -6,7 +6,9 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-public class TopicResponse implements Serializable,AvoidObfuscate{
+import ir.fanap.podstream.kafka.KafkaClient;
+
+public class TopicResponse implements Serializable, AvoidObfuscate {
 
     @Expose
     @SerializedName("controlTopic")
@@ -20,19 +22,6 @@ public class TopicResponse implements Serializable,AvoidObfuscate{
     @SerializedName("brokerAddress")
     private String brokerAddress;
 
-
-    @Expose
-    @SerializedName("size")
-    private long size;
-
-    private String sslPath;
-    public String getSslPath() {
-        return sslPath;
-    }
-
-    public void setsslPath(String sslPath) {
-        this.sslPath = sslPath;
-    }
 
     public TopicResponse(String controlTopic, String streamTopic) {
         this.controlTopic = controlTopic;
@@ -57,24 +46,25 @@ public class TopicResponse implements Serializable,AvoidObfuscate{
         return this;
     }
 
-    public void setSize(long size) {
-        this.size = size;
-    }
-
-    public long getSize() {
-        return size;
-    }
 
     public String toString() {
-        return  new Gson().toJson(this);
+        return new Gson().toJson(this);
     }
 
     public String getBrokerAddress() {
 //        return "192.168.112.32";
-       return brokerAddress;
+        return brokerAddress;
     }
 
     public void setBrokerAddress(String brokerAddress) {
         this.brokerAddress = brokerAddress;
+    }
+
+    public KafkaClient getKafkaProducerClient() {
+        return new KafkaClient.Builder().setTopic(controlTopic).setBrokerAddress(brokerAddress).build();
+    }
+
+    public KafkaClient getKafkaConcumerClient() {
+        return new KafkaClient.Builder().setTopic(streamTopic).setBrokerAddress(brokerAddress).build();
     }
 }

@@ -1,8 +1,7 @@
 package ir.fanap.podstream.offlinestream;
 
 
-import ir.fanap.podstream.entity.ErrorOutPut;
-import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstream.model.ErrorOutPut;
 
 public interface StreamListener {
     default void onStreamerReady(boolean state) {

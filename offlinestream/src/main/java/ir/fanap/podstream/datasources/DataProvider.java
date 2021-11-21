@@ -1,105 +1,80 @@
 package ir.fanap.podstream.datasources;
 
+
+import android.util.Log;
+
 import ir.fanap.podstream.datasources.buffer.BufferManager;
 import ir.fanap.podstream.datasources.buffer.EventListener;
 import ir.fanap.podstream.datasources.model.VideoPacket;
-import ir.fanap.podstream.entity.FileSetup;
-import ir.fanap.podstream.network.response.TopicResponse;
+import ir.fanap.podstream.kafka.KafkaClientManager;
+import ir.fanap.podstream.offlinestream.PodStream;
+import ir.fanap.podstream.util.Constants;
 
-public class DataProvider implements EventListener.BufferListener {
-    EventListener.ProviderListener listener;
+public class DataProvider implements KafkaClientManager.Listener {
     BufferManager bufferManager;
+    KafkaClientManager kafkaManager;
     long fileSize;
-    KafkaManager kafkaManager;
-    boolean cancelled = false;
+    boolean isWaitForPacket = false;
+    private long buffered;
+    private long startBuffer;
+    private long endBuffer;
+    private long lastLength;
+    boolean isReady;
 
-    public EventListener.ProviderListener getListener() {
-        return listener;
-    }
-
-    public DataProvider setListener(EventListener.ProviderListener listener) {
-        this.listener = listener;
-        return this;
-    }
-
-    public DataProvider(TopicResponse kafkaConfigs, String token, EventListener.ProviderListener listener) {
-        this.listener = listener;
-        kafkaManager = new KafkaManager();
-        bufferManager = new BufferManager(kafkaManager).setListener(this);
-        kafkaManager.connect(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath(), kafkaConfigs.getStreamTopic(), kafkaConfigs.getControlTopic(), token);
-    }
-
-    public void startStreaming(FileSetup file) {
-
-        kafkaManager.produceFileSizeMessage(file.getVideoAddress(), new EventListener.KafkaListener() {
-
-            @Override
-            public void write(VideoPacket packet) {
-
-            }
-
-            @Override
-            public void isEnd(boolean isEnd) {
-
-            }
-
-            @Override
-            public void onFileReady(long fileSize) {
-                if (cancelled) {
-                    cancelled = false;
-                    return;
-                }
-//                bufferManager.startUpdaterJob();
-                listener.onStart();
-            }
-
-            @Override
-            public void onError(int code, String message) {
-//                if (retryCount < 4 && !cancelled) {
-//                    Log.e("TAG", "onError:  retry" + retryCount);
-//                    retryCount++;
-//                    startStreming(file);
-//                } else {
-//                    listener.onError(0, "time out error");
-//                    retryCount = 0;
-//                }
-            }
-        });
-    }
-
-    @Override
-    public void fileReady(long fileSize) {
+    public DataProvider(KafkaClientManager clientManager, long fileSize) {
+        kafkaManager = clientManager;
+        kafkaManager.setListener("provider", this);
+        bufferManager = new BufferManager();
+        bufferManager.prepareBuffer(fileSize);
+        buffered = 0;
         this.fileSize = fileSize;
-        listener.providerIsReady(fileSize);
+        startUpdaterJob();
     }
 
     byte[] read(long offset, long length) {
-        return bufferManager.getData(offset, length);
+        while (isReady) ;
+        return bufferManager.read(offset, length);
     }
 
-
-    @Override
-    public void isEnd(boolean isEnd) {
-        listener.isEnd(isEnd);
+    private void startUpdaterJob() {
+        isReady = true;
+        new Thread(() -> {
+            while (kafkaManager.isStreaming()) {
+                if (bufferManager.needsUpdate() && !isWaitForPacket) {
+                    isWaitForPacket = true;
+                    Log.e("PodStream", "startUpdaterJob: ");
+                    lastLength = Constants.DefaultLengthValue;
+                    if (buffered + lastLength > fileSize) {
+                        isWaitForPacket = false;
+                        lastLength = fileSize - buffered;
+                        isReady = false;
+                        break;
+                    }
+                    kafkaManager.produceFileChankMessage(startBuffer + "," + lastLength);
+                    endBuffer = endBuffer + lastLength;
+                    startBuffer = (endBuffer - lastLength);
+                }
+            }
+            endStreaming();
+        }).start();
     }
 
-    @Override
-    public void onConnect() {
-        listener.onStreamerIsReady(true);
-    }
-
-    @Override
-    public void onDisconnect() {
-        listener.onStreamerIsReady(false);
-    }
-
-    public void endStreaming() {
-        cancelled = true;
+    private void endStreaming() {
         bufferManager.release();
     }
 
-    public void close() {
-        endStreaming();
-        kafkaManager.produceCloseMessage();
+    @Override
+    public void onRecivedFileChank(byte[] chank) {
+        bufferManager.addToBuffer(new VideoPacket(chank, startBuffer, endBuffer));
+
+        if (endBuffer == fileSize)
+            Log.e(PodStream.TAG, "end of file end : " + endBuffer + " end:  " + fileSize);
+        else {
+            buffered = buffered + lastLength;
+            isWaitForPacket = false;
+
+        }
+
+        Log.e(PodStream.TAG, "onRecivedFileChank: start :" + startBuffer + " end:  " + endBuffer);
     }
 }

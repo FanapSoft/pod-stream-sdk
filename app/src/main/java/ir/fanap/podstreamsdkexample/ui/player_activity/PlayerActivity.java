@@ -16,8 +16,7 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import java.util.ArrayList;
 import java.util.List;
 
-import ir.fanap.podstream.entity.FileSetup;
-import ir.fanap.podstream.network.response.DashResponse;
+import ir.fanap.podstream.model.FileSetup;
 import ir.fanap.podstreamsdkexample.data.VideoItem;
 
 public class PlayerActivity extends AppCompatActivity implements PlayerConstract.View {
