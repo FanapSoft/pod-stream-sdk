@@ -17,9 +17,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 
-import ir.fanap.podstream.util.Constants;
-import ir.fanap.podstream.network.response.DashResponse;
-
 
 /**
  * A {@link DataSource} for reading local files.
@@ -84,7 +81,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
     public ProgressiveDataSource(DataProvider provider) {
         super(/* isNetwork= */ false);
         this.provider = provider;
-        this.filmLength = this.provider.getFileSize();
+        this.filmLength = this.provider.fileSize;
         if (filmLength == 0)
             filmLength = 10000;
     }
@@ -119,7 +116,7 @@ public final class ProgressiveDataSource extends BaseDataSource {
         }
         readLength = (int) Math.min(readLength, bytesRemaining);
         try {
-            byte[] mainbuffer = provider.getBuffer(readPosition, readLength);
+            byte[] mainbuffer = provider.read(readPosition, readLength);
             System.arraycopy(mainbuffer, (int) (readPosition - offset), buffer, offset, readLength);
         } catch (Exception ignored) {
 

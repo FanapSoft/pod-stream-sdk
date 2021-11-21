@@ -1,147 +1,179 @@
 package ir.fanap.podstream.datasources.buffer;
 
-
-import android.util.Log;
-
 import java.util.Stack;
 
 import ir.fanap.podstream.datasources.KafkaManager;
-import ir.fanap.podstream.datasources.KafkaProcessHandler;
 import ir.fanap.podstream.datasources.model.VideoPacket;
-import ir.fanap.podstream.network.response.TopicResponse;
-import ir.fanap.podstream.util.Constants;
-import ir.fanap.podstream.util.PodThreadManager;
-import ir.fanap.podstream.util.ThreadEvent;
 
-public class BufferManager {
-    private long startBuffer = 0;
-    private long endBuffer = Constants.DEAFULT_BUFFER_LENGTH;
-    private Stack<VideoPacket> buffer;
-    private VideoPacket currentPacket;
+public class BufferManager implements EventListener.KafkaListener {
+
+
+    EventListener.BufferListener listener;
     KafkaManager kafkaManager;
-    ThreadEvent threadEvent, updaterEvant;
-    boolean streamIsStarted = false;
-    Thread updaterJob;
+    Stack<VideoPacket> buffer;
+    VideoPacket current;
+
+    long startBuffer, endBuffer;
+    long remaning;
+    long fileSize;
+    long bufferedSize;
+    long readedPos;
+    boolean isReady = false;
 
     public BufferManager(KafkaManager kafkaManager) {
-        buffer = new Stack<>();
         this.kafkaManager = kafkaManager;
-        threadEvent = new ThreadEvent();
-        updaterEvant = new ThreadEvent();
+        this.kafkaManager.setListener(this);
     }
 
-    public boolean existInBuffer(long offset, long length) {
-        return !buffer.empty() && (offset >= startBuffer && (offset + length) <= endBuffer);
+    @Override
+    public void onFileReady(long filSize) {
+        fileSize = filSize;
+        remaning = filSize;
+        bufferedSize = 0;
+        isReady = true;
+        initBuffer();
+        updateBuffer();
+        ((Runnable) () -> {
+            listener.fileReady(filSize);
+        }).run();
+
+    }
+
+    private void initBuffer() {
+        buffer = new Stack<>();
+        startBuffer = 0;
+        endBuffer = fileSize;
+        readedPos = 0;
+    }
+
+    public BufferManager setListener(EventListener.BufferListener listener) {
+        this.listener = listener;
+        return this;
     }
 
 
-    public void startUpdaterJob() {
-        streamIsStarted = true;
-        updaterJob = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (streamIsStarted) {
-                    if (threadEvent.isAwait()) {
-                        if (bufferIsReady()) {
-                            threadEvent.signal();
-                        }
+    @Override
+    public void write(VideoPacket packet) {
+        addToBuffer(packet);
+    }
+
+    @Override
+    public void isEnd(boolean isEnd) {
+        listener.isEnd(isEnd);
+        isReady = false;
+
+    }
+
+    public byte[] getData(long offset, long length) {
+        return checkBuffer(offset, length);
+    }
+
+
+    private byte[] checkBuffer(long offset, long length) {
+        if ((offset + length) > fileSize)
+            length = (int) (fileSize - readedPos);
+        byte[] result = new byte[(int) length];
+        int resultPosition = 0;
+        while (true) {
+            if (!isReady)
+                break;
+            if (existInBuffer(offset, length)) {
+                if (!existInCurrent(offset, length) && !partExistInCurrent(offset)) {
+                    changeCurrent();
+                    continue;
+                }
+                if (existInCurrent(offset, length)) {
+                    System.arraycopy(current.getBytes(), current.getReaded(), result, resultPosition, (int) length);
+                    readedPos += length;
+                    current.setReaded((int) length);
+                    break;
+                } else {
+                    long newlength = (current.getEnd() - offset) + 1;
+                    length = length - newlength;
+                    offset += newlength;
+                    System.arraycopy(current.getBytes(), current.getReaded(), result, resultPosition, (int) newlength);
+                    resultPosition = (int) (resultPosition + newlength);
+                    readedPos += newlength;
+                    if (length == 0) {
+                        break;
                     }
-                    if (needsUpdate()) {
-                        getNextChank();
-                        try {
-                            updaterEvant.await();
-                            Log.e("TAG", "run: ");
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    changeCurrent();
+                    offset = current.getStart();
+                    continue;
+                }
+            } else {
+                resetBuffer((int) offset);
+                continue;
+            }
+        }
+
+//        ((Runnable) () -> listener.write(result)).run();
+        return result;
+    }
+
+    public void resetBuffer(int offset) {
+        startBuffer = offset;
+        endBuffer = endBuffer + 200;
+        if (endBuffer > fileSize)
+            endBuffer = fileSize;
+        current = null;
+        buffer.clear();
+    }
+
+    private boolean existInBuffer(long offset, long length) {
+        return (offset >= startBuffer && (offset + length) <= endBuffer);
+    }
+
+    private boolean existInCurrent(long offset, long length) {
+        return (current != null && offset >= current.getStart() && (offset + length) <= current.getEnd());
+    }
+
+    private boolean partExistInCurrent(long offset) {
+        return (current != null && offset >= current.getStart() && offset <= current.getEnd());
+    }
+
+    private void updateBuffer() {
+        new Thread(() -> {
+            while (isReady) {
+                if (buffer.size() < 5) {
+                    kafkaManager.read(bufferedSize, 10);
                 }
             }
-        });
-        updaterJob.start();
+        }).start();
     }
 
-    public boolean bufferIsReady() {
-        return buffer.size() > 5;
+    private void changeCurrent() {
+        if (buffer.isEmpty())
+            return;
+        current = buffer.firstElement();
+        removefromBufer(0);
+        startBuffer = current.getStart();
     }
 
-    public boolean needsUpdate() {
-        return (buffer.size() < 10);
-    }
-
-    public boolean existInCurrent(long offset, long length) {
-        return (currentPacket != null) && (offset >= currentPacket.getStart() && offset + length <= currentPacket.getEnd());
-    }
-
-    public boolean existInCurrentAndNext(long offset, long length) {
-        return (offset >= currentPacket.getStart() && (offset + length) <= (currentPacket.getStart() + currentPacket.getStart()));
-    }
-
-    public void addToBuffer(VideoPacket packet) {
-        if (currentPacket == null) {
-            currentPacket = packet;
-            startBuffer = packet.getStart();
+    private void addToBuffer(VideoPacket packet) {
+        bufferedSize = packet.getEnd();
+        if (current == null) {
+            current = packet;
             return;
         }
         buffer.push(packet);
-        Log.e("buffer", "endBuffer  " + endBuffer);
     }
 
-    public VideoPacket getCurrentPacket() {
-        return currentPacket;
+    @Override
+    public void onConnect() {
+        listener.onConnect();
     }
 
-    public long getNextOffset() {
-        return currentPacket.getStart() + currentPacket.getEnd();
-    }
-
-    public void changeCurrentPacket() {
-        if (buffer.empty())
-            return;
-        currentPacket = buffer.firstElement();
-        startBuffer = currentPacket.getStart();
-        buffer.remove(0);
-    }
-
-    public void resetBuffer(long offset) {
-        kafkaManager.changeStartOffset(startBuffer);
-        buffer.clear();
-        startBuffer = offset;
-        endBuffer = offset + Constants.DEAFULT_BUFFER_LENGTH;
-        currentPacket = null;
-        try {
-            threadEvent.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void getNextChank() {
-        new PodThreadManager().doThisAndGo(() -> kafkaManager.produceNextChankMessage(new KafkaProcessHandler.ProccessHandler() {
-            @Override
-            public void onFileBytes(byte[] bytes, long start, long end) {
-                VideoPacket packet = new VideoPacket(bytes, start, end);
-                addToBuffer(packet);
-                updaterEvant.signal();
-            }
-
-            @Override
-            public void onStreamEnd() { }
-
-            @Override
-            public void onError(int code, String message) { }
-        }));
+    private void removefromBufer(int index) {
+        buffer.remove(index);
     }
 
 
     public void release() {
-        streamIsStarted = false;
-        threadEvent.signal();
-        updaterEvant.signal();
-        threadEvent = null;
-        updaterEvant = null;
-
-
+//        streamIsStarted = false;
+//        threadEvent.signal();
+//        updaterEvant.signal();
+//        threadEvent = null;
+//        updaterEvant = null;
     }
-
 }

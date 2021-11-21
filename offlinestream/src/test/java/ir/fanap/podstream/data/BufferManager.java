@@ -124,7 +124,6 @@ public class BufferManager implements EventListener.KafkaListener {
             endBuffer = fileSize;
         current = null;
         buffer.clear();
-
     }
 
     private boolean existInBuffer(int offset, int length) {

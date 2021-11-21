@@ -1,4 +1,4 @@
-package ir.fanap.podstream.datasources;
+package ir.fanap.podstream.datasources.customdatasource;
 
 public abstract class KafkaProcessHandler {
     public interface ProccessHandler {

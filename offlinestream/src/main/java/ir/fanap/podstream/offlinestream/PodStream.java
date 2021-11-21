@@ -29,6 +29,7 @@ import com.google.gson.GsonBuilder;
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.datasources.DataProvider;
 import ir.fanap.podstream.datasources.ProgressiveDataSource;
+import ir.fanap.podstream.datasources.buffer.EventListener;
 import ir.fanap.podstream.entity.ErrorOutPut;
 import ir.fanap.podstream.entity.FileSetup;
 import ir.fanap.podstream.R;
@@ -41,7 +42,7 @@ import ir.fanap.podstream.network.RetrofitClient;
 import ir.fanap.podstream.network.response.TopicResponse;
 import ir.fanap.podstream.util.HandlerMessageType.ActConstants;
 
-public class PodStream implements DataProvider.Listener {
+public class PodStream implements  EventListener.ProviderListener {
 
     public static String TAG = "PodStream";
     @SuppressLint("StaticFieldLeak")
@@ -210,14 +211,14 @@ public class PodStream implements DataProvider.Listener {
     public void prepareStreaming(FileSetup file) {
         if (checkRequireds()) {
             currentFile = file;
-            new PodThreadManager().doThisAndGo(() -> provider.startStreming(file));
+            new PodThreadManager().doThisAndGo(() -> provider.startStreaming(file));
         }
     }
 
 
     private void refreshStreaming(FileSetup file) {
         if (checkRequireds()) {
-            new PodThreadManager().doThisAndGo(() -> provider.startStreming(file));
+            new PodThreadManager().doThisAndGo(() -> provider.startStreaming(file));
         }
     }
 
@@ -313,6 +314,21 @@ public class PodStream implements DataProvider.Listener {
         provider.close();
         instance = null;
         isReady = false;
+    }
+
+    @Override
+    public void providerIsReady(long filSize) {
+        fileReadyToPlay();
+    }
+
+    @Override
+    public void write(int[] data) {
+
+    }
+
+    @Override
+    public void isEnd(boolean isEnd) {
+
     }
 
     @Override

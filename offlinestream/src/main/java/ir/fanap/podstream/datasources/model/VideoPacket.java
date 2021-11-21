@@ -4,6 +4,7 @@ public class VideoPacket {
     byte[] bytes;
     long start;
     long end;
+    int readed;
 
     public VideoPacket(byte[] bytes, long start, long end) {
         this.bytes = bytes;
@@ -21,5 +22,13 @@ public class VideoPacket {
 
     public long getEnd() {
         return end;
+    }
+
+    public void setReaded(int readed) {
+        this.readed = readed;
+    }
+
+    public int getReaded() {
+        return readed;
     }
 }

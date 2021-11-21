@@ -1,52 +1,86 @@
 package ir.fanap.podstream.datasources;
 
-import android.util.Log;
-
-import com.example.kafkassl.kafkaclient.ConsumResult;
-import com.example.kafkassl.kafkaclient.ConsumerClient;
-import com.example.kafkassl.kafkaclient.ProducerClient;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.Stack;
-
 import ir.fanap.podstream.datasources.buffer.BufferManager;
+import ir.fanap.podstream.datasources.buffer.EventListener;
 import ir.fanap.podstream.datasources.model.VideoPacket;
 import ir.fanap.podstream.entity.FileSetup;
-import ir.fanap.podstream.network.response.DashResponse;
 import ir.fanap.podstream.network.response.TopicResponse;
-import ir.fanap.podstream.util.Constants;
-import ir.fanap.podstream.util.PodThreadManager;
-import ir.fanap.podstream.util.Utils;
 
-public class DataProvider implements KafkaProcessHandler.ProccessHandler {
-    public interface Listener {
-        void onStreamerIsReady(boolean state);
+public class DataProvider implements EventListener.BufferListener {
+    EventListener.ProviderListener listener;
+    BufferManager bufferManager;
+    long fileSize;
+    KafkaManager kafkaManager;
+    boolean cancelled = false;
 
-        void onError(int code, String message);
+    public EventListener.ProviderListener getListener() {
+        return listener;
+    }
 
-        void onStart();
+    public DataProvider setListener(EventListener.ProviderListener listener) {
+        this.listener = listener;
+        return this;
+    }
+
+    public DataProvider(TopicResponse kafkaConfigs, String token, EventListener.ProviderListener listener) {
+        this.listener = listener;
+        kafkaManager = new KafkaManager();
+        bufferManager = new BufferManager(kafkaManager).setListener(this);
+        kafkaManager.connect(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath(), kafkaConfigs.getStreamTopic(), kafkaConfigs.getControlTopic(), token);
+    }
+
+    public void startStreaming(FileSetup file) {
+
+        kafkaManager.produceFileSizeMessage(file.getVideoAddress(), new EventListener.KafkaListener() {
+
+            @Override
+            public void write(VideoPacket packet) {
+
+            }
+
+            @Override
+            public void isEnd(boolean isEnd) {
+
+            }
+
+            @Override
+            public void onFileReady(long fileSize) {
+                if (cancelled) {
+                    cancelled = false;
+                    return;
+                }
+//                bufferManager.startUpdaterJob();
+                listener.onStart();
+            }
+
+            @Override
+            public void onError(int code, String message) {
+//                if (retryCount < 4 && !cancelled) {
+//                    Log.e("TAG", "onError:  retry" + retryCount);
+//                    retryCount++;
+//                    startStreming(file);
+//                } else {
+//                    listener.onError(0, "time out error");
+//                    retryCount = 0;
+//                }
+            }
+        });
+    }
+
+    @Override
+    public void fileReady(long fileSize) {
+        this.fileSize = fileSize;
+        listener.providerIsReady(fileSize);
+    }
+
+    byte[] read(long offset, long length) {
+        return bufferManager.getData(offset, length);
     }
 
 
-    Listener listener;
-    KafkaManager kafkaManager;
-    private BufferManager bufferManager;
-    boolean cancelled = false;
-
-    int retryCount = 0;
-
-    public DataProvider(TopicResponse kafkaConfigs, String token, Listener listener) {
-        this.listener = listener;
-        kafkaManager = new KafkaManager(this);
-        bufferManager = new BufferManager(kafkaManager);
-        kafkaManager.connect(kafkaConfigs.getBrokerAddress(), kafkaConfigs.getSslPath(), kafkaConfigs.getStreamTopic(), kafkaConfigs.getControlTopic(), token);
+    @Override
+    public void isEnd(boolean isEnd) {
+        listener.isEnd(isEnd);
     }
 
     @Override
@@ -59,74 +93,8 @@ public class DataProvider implements KafkaProcessHandler.ProccessHandler {
         listener.onStreamerIsReady(false);
     }
 
-    public long getFileSize() {
-        return kafkaManager.fileSize;
-    }
-
-    public Listener getListener() {
-        return listener;
-    }
-
-    public void startStreming(FileSetup file) {
-        kafkaManager.produceFileSizeMessage(file.getVideoAddress(), new KafkaProcessHandler.ProccessHandler() {
-            @Override
-            public void onFileReady(long fileSize) {
-                if (cancelled) {
-                    cancelled = false;
-                    return;
-                }
-                bufferManager.startUpdaterJob();
-                listener.onStart();
-            }
-
-            @Override
-            public void onError(int code, String message) {
-                if (retryCount < 4 && !cancelled) {
-                    Log.e("TAG", "onError:  retry" + retryCount);
-                    retryCount++;
-                    startStreming(file);
-                } else {
-                    listener.onError(0, "time out error");
-                    retryCount = 0;
-                }
-            }
-        });
-    }
-
-    private long readPosition;
-
-    public byte[] getBuffer(long offset, long length) throws Exception {
-        byte[] result = new byte[(int) length];
-        while (true) {
-            if (!bufferManager.existInBuffer(offset, length)) {
-                bufferManager.resetBuffer(offset);
-                continue;
-            }
-
-            if (!bufferManager.existInCurrent(offset, length)) {
-                bufferManager.changeCurrentPacket();
-                continue;
-            }
-
-            if (bufferManager.existInCurrent(offset, length)) {
-                System.arraycopy(bufferManager.getCurrentPacket().getBytes(), (int) (readPosition - offset), result, (int) offset, (int) length);
-                break;
-            }
-
-            if (bufferManager.existInCurrentAndNext(offset, length)) {
-                System.arraycopy(bufferManager.getCurrentPacket().getBytes(), (int) (readPosition - offset), result, (int) offset, (int) length);
-                offset = bufferManager.getNextOffset();
-                bufferManager.changeCurrentPacket();
-                continue;
-            }
-        }
-        readPosition += length;
-        return result;
-    }
-
     public void endStreaming() {
         cancelled = true;
-        kafkaManager.reset();
         bufferManager.release();
     }
 
