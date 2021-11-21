@@ -7,6 +7,10 @@ import androidx.annotation.Nullable;
 import com.example.kafkassl.kafkaclient.ConsumResult;
 import com.example.kafkassl.kafkaclient.ConsumerClient;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -88,4 +92,5 @@ public class KafkaConsumer extends KafkaClient {
             return new KafkaConsumer(this);
         }
     }
+
 }

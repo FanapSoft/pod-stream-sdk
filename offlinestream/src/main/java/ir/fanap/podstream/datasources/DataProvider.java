@@ -39,16 +39,14 @@ public class DataProvider implements KafkaClientManager.Listener {
     private void startUpdaterJob() {
         isReady = true;
         new Thread(() -> {
-            while (kafkaManager.isStreaming()) {
+            while (isReady) {
+//            while (kafkaManager.isStreaming()) {
                 if (bufferManager.needsUpdate() && !isWaitForPacket) {
                     isWaitForPacket = true;
                     Log.e("PodStream", "startUpdaterJob: ");
                     lastLength = Constants.DefaultLengthValue;
                     if (buffered + lastLength > fileSize) {
-                        isWaitForPacket = false;
                         lastLength = fileSize - buffered;
-                        isReady = false;
-                        break;
                     }
                     kafkaManager.produceFileChankMessage(startBuffer + "," + lastLength);
                     endBuffer = endBuffer + lastLength;
@@ -65,14 +63,15 @@ public class DataProvider implements KafkaClientManager.Listener {
 
     @Override
     public void onRecivedFileChank(byte[] chank) {
-        bufferManager.addToBuffer(new VideoPacket(chank, startBuffer, endBuffer));
+        bufferManager.addToBuffer(new VideoPacket(chank, startBuffer, startBuffer + lastLength));
 
-        if (endBuffer == fileSize)
+        if (endBuffer == fileSize) {
             Log.e(PodStream.TAG, "end of file end : " + endBuffer + " end:  " + fileSize);
-        else {
+            isReady = false;
+            isWaitForPacket = false;
+        } else {
             buffered = buffered + lastLength;
             isWaitForPacket = false;
-
         }
 
         Log.e(PodStream.TAG, "onRecivedFileChank: start :" + startBuffer + " end:  " + endBuffer);

@@ -92,7 +92,7 @@ public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSo
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.localserver);
+        End_Point_Base = mContext.getString(R.string.mainserver);
     }
 
     /**

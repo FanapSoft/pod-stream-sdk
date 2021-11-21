@@ -4,7 +4,11 @@ import android.util.Log;
 
 import com.example.kafkassl.kafkaclient.ConsumResult;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import ir.fanap.podstream.datasources.BaseListener;
@@ -76,11 +80,29 @@ public class KafkaClientManager {
                         array(), key + "," + token);
     }
 
+    int readPosition;
+
     public void produceFileChankMessage(String key) {
         if (token == null) {
             handleError("Token is Null");
             return;
         }
+        String[] arrOfStr = key.split(",", 2);
+        int offset = Integer.parseInt(arrOfStr[0]);
+        int length = Integer.parseInt(arrOfStr[1]);
+        byte[] chank = new byte[length];
+        System.arraycopy(buffer, (int) (readPosition - offset), chank, 0, length);
+        readPosition = readPosition + length;
+
+
+        handleFileChanckRecived(chank);
+        Log.e(PodStream.TAG, "produceFileChankMessage: " + Arrays.toString(arrOfStr));
+
+
+        if (true)
+            return;
+
+        /////////////////////////////////////////////////////////////////////////////// will be remove
         producer.produceMessage(
                 ByteBuffer.allocate(Long.BYTES).
                         putLong(KAFKA_MEESSAGE_GET_FILE_BYTE).
@@ -98,9 +120,13 @@ public class KafkaClientManager {
     }
 
     public void consume() {
+        prepareFile();
+        if (true)
+            return;
         if (!consumer.isActive())
             consumer.activate();
         isStreaming = true;
+
         new PodThreadManager().doThisAndGo(() -> {
             String key = "-1";
             while (consumer.isActive()) {
@@ -125,6 +151,32 @@ public class KafkaClientManager {
         for (Listener listener : listeners.values()) {
             listener.onError(1, error);
         }
+    }
+
+    byte[] buffer;
+
+    public void prepareFile() {
+        readPosition = 0;
+        final File root = android.os.Environment.getExternalStorageDirectory();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byte[] videoBuffer = new byte[100];
+        File file = new File(root.getAbsolutePath() + "/test2flv.mp4");
+        byte[] temp = new byte[(int) file.length()];
+        FileInputStream fileInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            fileInputStream.read(temp);
+            videoBuffer = ByteBuffer.allocate(videoBuffer.length + temp.length)
+                    .put(videoBuffer)
+                    .put(temp)
+                    .array();
+            fileInputStream.close();
+            buffer = videoBuffer;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        handleFileSizeRecived(buffer.length);
     }
 
     public void handleFileSizeRecived(long fileSize) {
@@ -164,6 +216,5 @@ public class KafkaClientManager {
         } catch (Exception var2) {
         }
     }
-
 
 }
