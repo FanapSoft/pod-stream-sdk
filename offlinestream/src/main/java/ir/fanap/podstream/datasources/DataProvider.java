@@ -60,8 +60,8 @@ public class DataProvider {
             } else {
 //                Utils.showLog("send before reset : Roffset :" + offset + "Rend : " + (offset + length) + " start buffer : " + bufferManager.getStartBuffer() + " end buffer : " + bufferManager.getEndBuffer());
 
-//                bufferManager.resetBuffer((int) offset, (int) (offset + length));
-                bufferManager.resetBuffer((int) offset, (int) fileSize);
+                bufferManager.resetBuffer((int) offset, (int) (offset + length));
+//                bufferManager.resetBuffer((int) offset, (int) fileSize);
                 continue;
             }
         }

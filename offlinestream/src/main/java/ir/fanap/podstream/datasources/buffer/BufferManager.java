@@ -145,11 +145,11 @@ public class BufferManager {
                     if (readPosition + readLength > fileSize)
                         readLength = fileSize - readPosition;
 
-//                    Utils.showLog("send kafka : " + readPosition + "," + readLength);
-//                    if ((readPosition + readLength) > endBuffer) {
-//                        endBuffer = (readPosition + readLength);
-//                        Utils.showLog("send change : " +"startbuffer : " + startBuffer + "endbuffer: " + endBuffer);
-//                    }
+                    Utils.showLog("send kafka : " + readPosition + "," + readLength);
+                    if ((readPosition + readLength) > endBuffer) {
+                        endBuffer = (readPosition + readLength);
+                        Utils.showLog("send change : " +"startbuffer : " + startBuffer + "endbuffer: " + endBuffer);
+                    }
                     kafkaManager.produceFileChankMessage(readPosition + "," + readLength);
                     last = System.currentTimeMillis();
                     Utils.showLog("send req : ");
