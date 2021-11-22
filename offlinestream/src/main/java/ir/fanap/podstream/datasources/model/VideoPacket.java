@@ -25,10 +25,14 @@ public class VideoPacket {
     }
 
     public void setReaded(int readed) {
-        this.readed = readed;
+        this.readed = this.readed + readed;
     }
 
     public int getReaded() {
         return readed;
+    }
+
+    public void setBytes(byte[] bytes) {
+        this.bytes = bytes;
     }
 }

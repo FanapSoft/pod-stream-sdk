@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 
 import io.reactivex.schedulers.Schedulers;
 import ir.fanap.podstream.datasources.DataProvider;
+import ir.fanap.podstream.datasources.FileDataSource;
 import ir.fanap.podstream.datasources.ProgressiveDataSource;
 import ir.fanap.podstream.datasources.buffer.EventListener;
 import ir.fanap.podstream.kafka.KafkaClient;
@@ -92,7 +93,7 @@ public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSo
     }
 
     private void setServer(Activity mContext) {
-        End_Point_Base = mContext.getString(R.string.mainserver);
+        End_Point_Base = mContext.getString(R.string.localserver);
     }
 
     /**
@@ -233,8 +234,16 @@ public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSo
         }
     }
 
-//    private FileDataSource.Factory buildDataSourceFactory() {
-//        return new FileDataSource.Factory();
+//    private FileDataSource.Factory buildDataSourceFactory(long s) {
+//        return new FileDataSource.Factory(s);
+//    }
+//
+//    private MediaSource buildMediaSource(long fileSize) {
+//        FileDataSource.Factory dataSourceFactory = buildDataSourceFactory(fileSize);
+//        MediaItem mediaItem = new MediaItem.Builder()
+//                .setUri(Uri.EMPTY)
+//                .build();
+//        return new ProgressiveMediaSource.Factory(dataSourceFactory, new DefaultExtractorsFactory()).createMediaSource(mediaItem);
 //    }
 
     private ProgressiveDataSource.Factory buildDataSourceFactory(long fileSize) {

@@ -88,10 +88,11 @@ public class KafkaClientManager {
             return;
         }
         String[] arrOfStr = key.split(",", 2);
-        int offset = Integer.parseInt(arrOfStr[0]);
+
         int length = Integer.parseInt(arrOfStr[1]);
+
         byte[] chank = new byte[length];
-        System.arraycopy(buffer, (int) (readPosition - offset), chank, 0, length);
+        System.arraycopy(buffer, readPosition, chank, 0, length);
         readPosition = readPosition + length;
 
 
@@ -159,19 +160,18 @@ public class KafkaClientManager {
         readPosition = 0;
         final File root = android.os.Environment.getExternalStorageDirectory();
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byte[] videoBuffer = new byte[100];
+        byte[] videoBuffer = new byte[0];
         File file = new File(root.getAbsolutePath() + "/test2flv.mp4");
         byte[] temp = new byte[(int) file.length()];
         FileInputStream fileInputStream = null;
         try {
             fileInputStream = new FileInputStream(file);
             fileInputStream.read(temp);
-            videoBuffer = ByteBuffer.allocate(videoBuffer.length + temp.length)
+            buffer = ByteBuffer.allocate(videoBuffer.length + temp.length)
                     .put(videoBuffer)
                     .put(temp)
                     .array();
             fileInputStream.close();
-            buffer = videoBuffer;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -217,4 +217,7 @@ public class KafkaClientManager {
         }
     }
 
+    public byte[] getBuffer() {
+        return buffer;
+    }
 }

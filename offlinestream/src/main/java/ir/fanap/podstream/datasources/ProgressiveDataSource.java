@@ -13,7 +13,11 @@ import com.google.android.exoplayer2.upstream.BaseDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.TransferListener;
+import com.google.android.exoplayer2.util.Assertions;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -25,7 +29,12 @@ import ir.fanap.podstream.kafka.KafkaClientManager;
 /**
  * A {@link DataSource} for reading local files.
  */
-public final class ProgressiveDataSource extends BaseDataSource {
+public final class ProgressiveDataSource extends BaseDataSource implements DataProvider.Listener {
+    @Override
+    public void reset() {
+//        bufferreadPosition = 0;
+    }
+
     public interface DataSourceListener extends BaseListener {
     }
 
@@ -83,39 +92,35 @@ public final class ProgressiveDataSource extends BaseDataSource {
     }
 
 
-    private RandomAccessFile file;
-
     private Uri uri;
     private long bytesRemaining;
     private boolean opened;
-    private long filmLength;
+    private long fileSize;
     private long readPosition;
     DataProvider provider;
     DataSourceListener listener;
+    private boolean errorReported;
 
 
     public ProgressiveDataSource(DataProvider provider, DataSourceListener listener) {
         super(/* isNetwork= */ false);
         this.provider = provider;
+        this.provider.setListener(this);
         this.listener = listener;
-        this.filmLength = this.provider.fileSize;
-
-        if (filmLength == 0)
-            filmLength = 10000;
+        this.fileSize = this.provider.fileSize;
     }
 
-    boolean errorReported = false;
 
     @Override
     public long open(DataSpec dataSpec) throws IOException {
         uri = dataSpec.uri;
         readPosition = ((int) dataSpec.position);
-        bytesRemaining = (int) (filmLength - (dataSpec.position));//2781222l
-        if (bytesRemaining <= 0 || readPosition + bytesRemaining > filmLength) {
+        bytesRemaining = (int) (fileSize - (dataSpec.position));//2781222l
+        if (bytesRemaining <= 0 || readPosition + bytesRemaining > fileSize) {
             if (!errorReported) {
                 errorReported = true;
                 listener.onError(-1, "Unsatisfiable range: [" + readPosition + ", " + dataSpec.length
-                        + "], length: " + filmLength);
+                        + "], length: " + fileSize);
             }
         }
 
@@ -133,12 +138,13 @@ public final class ProgressiveDataSource extends BaseDataSource {
         readLength = (int) Math.min(readLength, bytesRemaining);
         try {
             byte[] mainbuffer = provider.read(readPosition, readLength);
-            System.arraycopy(mainbuffer, (int) (readPosition - offset), buffer, offset, readLength);
+            System.arraycopy(mainbuffer, 0, buffer, offset, readLength);
         } catch (Exception ignored) {
             Log.e("TAG", "read: ");
         }
         readPosition += readLength;
         bytesRemaining -= readLength;
+
         return readLength;
     }
 
@@ -153,21 +159,9 @@ public final class ProgressiveDataSource extends BaseDataSource {
     @Override
     public void close() throws com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException {
         uri = null;
-        ByteBuffer buffers = ByteBuffer.allocate(Long.BYTES);
-        buffers.putLong(-2);
-        try {
-            if (file != null) {
-                file.close();
-            }
-        } catch (IOException e) {
-            throw new com.google.android.exoplayer2.upstream.FileDataSource.FileDataSourceException(e);
-        } finally {
-
-            file = null;
-            if (opened) {
-                opened = false;
-                transferEnded();
-            }
+        if (opened) {
+            opened = false;
+            transferEnded();
         }
     }
 

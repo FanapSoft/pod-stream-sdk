@@ -1,13 +1,17 @@
 package ir.fanap.podstream.datasources.buffer;
 
+import android.util.Log;
+
+import java.util.Random;
 import java.util.Stack;
+
 import ir.fanap.podstream.datasources.model.VideoPacket;
+import ir.fanap.podstream.offlinestream.PodStream;
 
 public class BufferManager {
 
     Stack<VideoPacket> buffer;
     VideoPacket current;
-
     long startBuffer, endBuffer;
     long remaning;
     long fileSize;
@@ -30,49 +34,13 @@ public class BufferManager {
     }
 
 
-    public byte[] read(long offset, long length) {
-        if ((offset + length) > fileSize)
-            length = (int) (fileSize - readedPos);
-        byte[] result = new byte[(int) length];
-        int resultPosition = 0;
-        while (true) {
-            if (existInBuffer(offset, length)) {
-                if (!existInCurrent(offset, length) && !partExistInCurrent(offset)) {
-                    changeCurrent();
-                    continue;
-                }
-                if (existInCurrent(offset, length)) {
-                    System.arraycopy(current.getBytes(), current.getReaded(), result, resultPosition, (int) length);
-                    readedPos += length;
-                    current.setReaded((int) length);
-                    break;
-                } else {
-                    long newlength = (current.getEnd() - offset) + 1;
-                    length = length - newlength;
-                    offset += newlength;
-                    System.arraycopy(current.getBytes(), current.getReaded(), result, resultPosition, (int) newlength);
-                    resultPosition = (int) (resultPosition + newlength);
-                    readedPos += newlength;
-                    if (length == 0) {
-                        break;
-                    }
-                    changeCurrent();
-                    offset = current.getStart();
-                    continue;
-                }
-            } else {
-                resetBuffer((int) offset);
-                continue;
-            }
-        }
-        return result;
+    public VideoPacket getCurrent() {
+        return current;
     }
 
-    public void resetBuffer(int offset) {
-        startBuffer = offset;
-        endBuffer = endBuffer + 200;
-        if (endBuffer > fileSize)
-            endBuffer = fileSize;
+    public void resetBuffer(int startBuffer, int endBuffer) {
+        this.startBuffer = startBuffer;
+        this.endBuffer = endBuffer;
         current = null;
         buffer.clear();
     }
@@ -81,30 +49,44 @@ public class BufferManager {
         return true;
     }
 
-    private boolean existInBuffer(long offset, long length) {
+    public boolean existInBuffer(long offset, long length) {
         return (buffer != null && offset >= startBuffer && (offset + length) <= endBuffer);
     }
 
-    private boolean existInCurrent(long offset, long length) {
+    public boolean existInCurrent(long offset, long length) {
         return (current != null && offset >= current.getStart() && (offset + length) <= current.getEnd());
     }
 
-    private boolean partExistInCurrent(long offset) {
+    public boolean partExistInCurrent(long offset) {
         return (current != null && offset >= current.getStart() && offset <= current.getEnd());
     }
 
-    private void changeCurrent() {
+    public void changeCurrent() {
         if (buffer.isEmpty())
             return;
         current = buffer.firstElement();
+//        current.setReaded(1);
         removefromBufer(0);
         startBuffer = current.getStart();
+    }
+
+    public byte getRandomLength() {
+        Random rand = new Random();
+        int min = 0;
+        int max = 9;
+        int randomNum = rand.nextInt((max - min) + 1) + min;
+        return (byte) randomNum;
+//        return randomNum;
     }
 
     public void addToBuffer(VideoPacket packet) {
         bufferedSize = packet.getEnd();
         if (current == null) {
             current = packet;
+//            byte[] bu = new byte[5000];
+//            for (int i = 0; i < 5000; i++)
+//                bu[i] = getRandomLength();
+//            current.setBytes(bu);
             return;
         }
         buffer.push(packet);

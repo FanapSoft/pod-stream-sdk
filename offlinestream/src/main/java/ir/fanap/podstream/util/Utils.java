@@ -10,6 +10,8 @@ import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.util.Properties;
 
+import ir.fanap.podstream.offlinestream.PodStream;
+
 public class Utils {
 
 
@@ -44,6 +46,13 @@ public class Utils {
         return propertiesProducer;
     }
 
+    public static void showLog(String msg) {
+        Log.e(PodStream.TAG, msg);
+    }
+
+    public static void LogWithDiff(String msg, long lasttime) {
+        Log.e(PodStream.TAG, msg + "diff time : " + (System.currentTimeMillis() - lasttime));
+    }
 
     public static void logger(String tag, String meesage) {
         Log.e(tag, meesage);
