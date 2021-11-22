@@ -23,6 +23,7 @@ public class DataProvider implements KafkaClientManager.Listener {
     private long readPosition;
     private long lastLength;
     boolean isReady;
+    private long bufferReadPosition;
 
     public DataProvider setListener(Listener listener) {
         this.listener = listener;
@@ -39,19 +40,19 @@ public class DataProvider implements KafkaClientManager.Listener {
         startUpdaterJob();
     }
 
-    private long bufferreadPosition;
+
 
     public byte[] read(long offset, long length) {
         while (isReady) ;
         if ((offset + length) > fileSize)
-            length = (int) (fileSize - bufferreadPosition);
+            length = (int) (fileSize - bufferReadPosition);
         byte[] result = new byte[(int) length];
         int resultPosition = 0;
         while (true) {
             if (bufferManager.existInBuffer(offset, length)) {
                 if (bufferManager.existInCurrent(offset, length)) {
                     System.arraycopy(bufferManager.getCurrent().getBytes(), (int) (offset - bufferManager.getCurrent().getStart()), result, resultPosition, (int) length);
-                    bufferreadPosition += length;
+                    bufferReadPosition += length;
                     bufferManager.getCurrent().setReaded((int) length);
                     break;
                 } else if (bufferManager.partExistInCurrent(offset)) {
@@ -60,13 +61,13 @@ public class DataProvider implements KafkaClientManager.Listener {
                     offset += newlength;
                     System.arraycopy(bufferManager.getCurrent().getBytes(), bufferManager.getCurrent().getReaded(), result, resultPosition, (int) newlength);
                     resultPosition = (int) (resultPosition + newlength);
-                    bufferreadPosition += newlength;
+                    bufferReadPosition += newlength;
                     if (length == 0) {
                         break;
                     }
                     changeCurrent();
                     offset = bufferManager.getCurrent().getStart();
-                    Utils.showLog("exist in next");
+//                    Utils.showLog("exist in next");
                     continue;
                 } else
                     changeCurrent();
@@ -81,7 +82,7 @@ public class DataProvider implements KafkaClientManager.Listener {
 
     public void changeCurrent() {
         bufferManager.changeCurrent();
-        Utils.showLog("current changed");
+//        Utils.showLog("current changed");
     }
 
     private void startUpdaterJob() {
