@@ -94,8 +94,7 @@ public final class FileDataSource extends BaseDataSource {
                 e.printStackTrace();
             }
 
-            DataProvider provider = new DataProvider(kafkaManager, fileSize);
-//            provider.setBuffer(videoBuffer);
+            DataProvider provider = new DataProvider(fileSize);
             FileDataSource dataSource = new FileDataSource(provider, videoBuffer);
             if (listener != null) {
                 dataSource.addTransferListener(listener);

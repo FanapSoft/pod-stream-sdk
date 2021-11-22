@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 
 import ir.fanap.podstream.datasources.buffer.EventListener;
 import ir.fanap.podstream.kafka.KafkaClientManager;
+import ir.fanap.podstream.util.Utils;
 
 
 /**
@@ -83,7 +84,7 @@ public final class ProgressiveDataSource extends BaseDataSource implements DataP
 
         @Override
         public ProgressiveDataSource createDataSource() {
-            dataSource = new ProgressiveDataSource(new DataProvider(kafkaManager, fileSize), dalistener);
+            dataSource = new ProgressiveDataSource(new DataProvider(fileSize), dalistener);
             if (listener != null) {
                 dataSource.addTransferListener(listener);
             }
@@ -137,6 +138,7 @@ public final class ProgressiveDataSource extends BaseDataSource implements DataP
         }
         readLength = (int) Math.min(readLength, bytesRemaining);
         try {
+//            Utils.showLog("send : "+readPosition + "," + readLength);
             byte[] mainbuffer = provider.read(readPosition, readLength);
             System.arraycopy(mainbuffer, 0, buffer, offset, readLength);
         } catch (Exception ignored) {

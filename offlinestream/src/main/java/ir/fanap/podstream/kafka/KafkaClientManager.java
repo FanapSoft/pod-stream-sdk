@@ -179,12 +179,18 @@ public class KafkaClientManager {
         handleFileSizeRecived(buffer.length);
     }
 
+    boolean isFirst = true;
+
     public void handleFileSizeRecived(long fileSize) {
+//        if (isFirst) {
+//            isFirst = false;
+//            return;
+//        }
         listeners.get("main").onFileReady(fileSize);
     }
 
     public void handleFileChanckRecived(byte[] chank) {
-        listeners.get("provider").onRecivedFileChank(chank);
+        listeners.get("buffer").onRecivedFileChank(chank);
     }
 
     public void connectConsumer() {

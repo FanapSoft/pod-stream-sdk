@@ -64,7 +64,7 @@ public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSo
     public String token;
     private boolean isReady = false;
     private String End_Point_Base;
-    private int backBufferSize = 60000;
+    private int backBufferSize = 180000;
     private Activity mContext;
     protected Gson gson;
     KafkaClientManager kafkaManager;
