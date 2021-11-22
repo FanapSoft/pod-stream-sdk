@@ -87,21 +87,21 @@ public class KafkaClientManager {
             handleError("Token is Null");
             return;
         }
-        String[] arrOfStr = key.split(",", 2);
-
-        int length = Integer.parseInt(arrOfStr[1]);
-
-        byte[] chank = new byte[length];
-        System.arraycopy(buffer, readPosition, chank, 0, length);
-        readPosition = readPosition + length;
-
-
-        handleFileChanckRecived(chank);
-        Log.e(PodStream.TAG, "produceFileChankMessage: " + Arrays.toString(arrOfStr));
-
-
-        if (true)
-            return;
+//        String[] arrOfStr = key.split(",", 2);
+//
+//        int length = Integer.parseInt(arrOfStr[1]);
+//
+//        byte[] chank = new byte[length];
+//        System.arraycopy(buffer, readPosition, chank, 0, length);
+//        readPosition = readPosition + length;
+//
+//
+//        handleFileChanckRecived(chank);
+//        Log.e(PodStream.TAG, "produceFileChankMessage: " + Arrays.toString(arrOfStr));
+//
+//
+//        if (true)
+//            return;
 
         /////////////////////////////////////////////////////////////////////////////// will be remove
         producer.produceMessage(
@@ -121,9 +121,9 @@ public class KafkaClientManager {
     }
 
     public void consume() {
-        prepareFile();
-        if (true)
-            return;
+//        prepareFile();
+//        if (true)
+//            return;
         if (!consumer.isActive())
             consumer.activate();
         isStreaming = true;

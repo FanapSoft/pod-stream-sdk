@@ -42,22 +42,19 @@ public class DataProvider implements KafkaClientManager.Listener {
     private long bufferreadPosition;
 
     public byte[] read(long offset, long length) {
+        while (isReady) ;
         if ((offset + length) > fileSize)
             length = (int) (fileSize - bufferreadPosition);
         byte[] result = new byte[(int) length];
         int resultPosition = 0;
         while (true) {
             if (bufferManager.existInBuffer(offset, length)) {
-                if (!bufferManager.existInCurrent(offset, length) && !bufferManager.partExistInCurrent(offset)) {
-                    changeCurrent();
-                    continue;
-                }
                 if (bufferManager.existInCurrent(offset, length)) {
-                    System.arraycopy(bufferManager.getCurrent().getBytes(), (int) (offset-bufferManager.getCurrent().getStart()), result, resultPosition, (int) length);
+                    System.arraycopy(bufferManager.getCurrent().getBytes(), (int) (offset - bufferManager.getCurrent().getStart()), result, resultPosition, (int) length);
                     bufferreadPosition += length;
                     bufferManager.getCurrent().setReaded((int) length);
                     break;
-                } else {
+                } else if (bufferManager.partExistInCurrent(offset)) {
                     long newlength = (bufferManager.getCurrent().getEnd() - offset) + 1;
                     length = length - newlength;
                     offset += newlength;
@@ -71,7 +68,8 @@ public class DataProvider implements KafkaClientManager.Listener {
                     offset = bufferManager.getCurrent().getStart();
                     Utils.showLog("exist in next");
                     continue;
-                }
+                } else
+                    changeCurrent();
             } else {
 //                resetBuffer((int) offset);
                 continue;
@@ -116,20 +114,6 @@ public class DataProvider implements KafkaClientManager.Listener {
         if (readPosition == fileSize)
             isReady = false;
         isWaitForPacket = false;
-
-//        startBuffer = endBuffer + 1;
-//        endBuffer = (startBuffer + lastLength);
-//
-//
-//        if (endBuffer == fileSize) {
-//            Log.e(PodStream.TAG, "end of file end : " + endBuffer + " end:  " + fileSize);
-//            isReady = false;
-//            isWaitForPacket = false;
-//        } else {
-//            buffered = buffered + lastLength;
-//            isWaitForPacket = false;
-//        }
-
         Log.e(PodStream.TAG, "onRecivedFileChank: readPosition :" + readPosition + " lastLength:  " + lastLength);
     }
 }
