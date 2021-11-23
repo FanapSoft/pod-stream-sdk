@@ -73,7 +73,7 @@ public class BufferManager {
     }
 
     public boolean existInBuffer(long offset, long length) {
-        return (offset >= startBuffer && (offset + length) <= endBuffer);
+        return (offset >= startBuffer && ((offset + length)-1) <= endBuffer);
     }
 
     public boolean existInCurrent(long offset, long length) {
@@ -143,6 +143,7 @@ public class BufferManager {
         public void restart(long readPosition,long readLength){
             this.readPosition=readPosition;
             this.readLength=readLength;
+            Utils.showLog("Masoud Data of thread restart");
         }
 
         public PutStack(@NonNull String name, int chankSize, int readPosition, long readLength) {

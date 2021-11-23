@@ -59,10 +59,12 @@ public class DataProvider {
                 }
             } else {
 //                Utils.showLog("send before reset : Roffset :" + offset + "Rend : " + (offset + length) + " start buffer : " + bufferManager.getStartBuffer() + " end buffer : " + bufferManager.getEndBuffer());
-                int readlen=500000;
+                long readlen=500000;
+                if(length>readlen)
+                    readlen=length;
                 if((offset+readlen)>fileSize)
                     readlen= (int) (fileSize-offset);
-                bufferManager.resetBuffer((int) offset, readlen);
+                bufferManager.resetBuffer((int) offset,(int) readlen);
 //                bufferManager.resetBuffer((int) offset, (int) fileSize);
                 continue;
             }
