@@ -30,7 +30,7 @@ public class KafkaClientManager {
 
     HashMap<String, Listener> listeners;
     private static KafkaClientManager instance;
-    public static final int CUNSUME_TIMEOUT = 100;
+    public static final int CUNSUME_TIMEOUT = 5000;
     private KafkaConsumer consumer;
     private KafkaProducer producer;
     private SSLHelper sslHelper;
@@ -133,7 +133,6 @@ public class KafkaClientManager {
             while (consumer.isActive()) {
                 ConsumResult cr = consumer.consumeMessage(CUNSUME_TIMEOUT, key);
                 key = new String(cr.getKey());
-
                 if (key.equals("10")) {
                     handleError(new String(cr.getValue()));
                 }
@@ -182,10 +181,10 @@ public class KafkaClientManager {
     boolean isFirst = true;
 
     public void handleFileSizeRecived(long fileSize) {
-//        if (isFirst) {
-//            isFirst = false;
-//            return;
-//        }
+        if (isFirst) {
+            isFirst = false;
+            return;
+        }
         listeners.get("main").onFileReady(fileSize);
     }
 

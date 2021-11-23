@@ -20,6 +20,7 @@ public class BufferManager {
     long startBuffer, endBuffer;
     long remaning;
     long fileSize;
+    int readlen=0;
 
     KafkaClientManager kafkaManager;
     PutStack putStack;
@@ -54,18 +55,21 @@ public class BufferManager {
     }
 
     public void resetBuffer(int offset, int length) {
-        if (putStack != null) {
-            putStack.stopUpdate();
-            putStack.interrupt();
-            putStack = null;
-        }
+
 //        Utils.showLog("send before reset : offset :" + offset + ",length : " + (offset + length) + " start buffer : " + startBuffer + " end buffer :" + endBuffer);
         this.startBuffer = offset;
-        this.endBuffer = offset + length;
+        this.endBuffer = (offset + length)-1;
         current = null;
-        buffer.clear();
-//        Utils.showLog("send reset buffer :" +offset + "end :" + endBuffer);
-        putStack = new PutStack(String.valueOf((System.currentTimeMillis() / 100)), 10, offset, Constants.DefaultLengthValue);
+        Utils.showLog("Masoud Restart buffer :" + offset + "end :" + endBuffer + " length "  +length + " file size=" + fileSize);
+        if(putStack==null){
+            buffer.clear();
+            putStack = new PutStack(startBuffer + endBuffer + "", 10, offset,Constants.DefaultLengthValue);
+            putStack.start();
+        }else{
+            putStack.restart(offset,Constants.DefaultLengthValue);
+            putStack.setReaddata(false);
+        }
+
     }
 
     public boolean existInBuffer(long offset, long length) {
@@ -73,7 +77,7 @@ public class BufferManager {
     }
 
     public boolean existInCurrent(long offset, long length) {
-        return (current != null && offset >= current.getStart() && (offset + length) <= current.getEnd());
+        return (current != null && offset >= current.getStart() && ((offset + length)-1) <= current.getEnd());
     }
 
     public boolean partExistInCurrent(long offset) {
@@ -82,32 +86,41 @@ public class BufferManager {
 
     public boolean checkEmpty() {
 //        return (current == null);
-        return (current == null | buffer == null || buffer.size() < 1);
+        return (current == null);
     }
 
     public void changeCurrent() {
         if (buffer.isEmpty()) {
-//            current = null; ???
             return;
         }
-        Utils.showLog("current start :" + current.getStart() + "current end : " + current.getEnd());
+        Utils.showLog("Masoud current is change oldstartbufer: " +startBuffer+"  oldendbufer:" + endBuffer);
         current = buffer.firstElement();
         removefromBufer(0);
         startBuffer = current.getStart();
-        Utils.showLog("send  buffer size :" + buffer.size());
+        if(endBuffer < startBuffer + startBuffer+Constants.DefaultLengthValue){
+            if(startBuffer+Constants.DefaultLengthValue<=fileSize)
+                endBuffer=(startBuffer+Constants.DefaultLengthValue-1);
+            else
+                endBuffer+=((fileSize-startBuffer)-1);
+        }
+        Utils.showLog("Masoud current is change newstartbufer: " +startBuffer+"  newendbufer:" + endBuffer);
+        Utils.showLog("Masoud buffer size :" + buffer.size());
     }
 
     public void addToBuffer(VideoPacket packet) {
         if (packet.getEnd() > endBuffer) {
-            Utils.showLog("send end buffer epdated : start :" + packet.getStart() + ", end  :" + packet.getEnd());
+            Utils.showLog("Masoud Buffer is grow oldendbufer:" + endBuffer + " newend: " + packet.getEnd());
             endBuffer = packet.getEnd();
         }
         if (current == null) {
             current = packet;
             return;
         }
-        buffer.push(packet);
-        Utils.showLog("buffer size :" + buffer.size());
+        synchronized (buffer){
+            buffer.push(packet);
+            Utils.showLog("Masoud insert to buffer -  size :" + buffer.size());
+        }
+
     }
 
     private void removefromBufer(int index) {
@@ -121,10 +134,16 @@ public class BufferManager {
     public class PutStack extends Thread implements KafkaClientManager.Listener {
 
         boolean loop = true;
+        boolean readdata = true;
         int chankSize = 5;
         long readPosition;
         long readLength;
         boolean isWaitForPacket;
+
+        public void restart(long readPosition,long readLength){
+            this.readPosition=readPosition;
+            this.readLength=readLength;
+        }
 
         public PutStack(@NonNull String name, int chankSize, int readPosition, long readLength) {
             super(name);
@@ -132,7 +151,7 @@ public class BufferManager {
             this.readPosition = readPosition;
             this.readLength = readLength;
             kafkaManager.setListener("buffer", this);
-            start();
+
         }
 
         long last;
@@ -140,16 +159,20 @@ public class BufferManager {
         @Override
         public void run() {
             while (loop && kafkaManager.isStreaming()) {
-                if (buffer.size() < chankSize && !isWaitForPacket && readPosition < fileSize) {
+                if(isWaitForPacket)
+                    continue;
+                else if(readdata==false){
+                    Utils.showLog("Masoud readdata=false and buffer realese: ");
+                    buffer.empty();
+                    readdata=true;
+                    continue;
+                }
+                else if (buffer.size() < chankSize && readPosition < fileSize) {
+                    Utils.showLog("Masoud start recive packet: ");
                     isWaitForPacket = true;
                     if (readPosition + readLength > fileSize)
                         readLength = fileSize - readPosition;
-
-                    Utils.showLog("send kafka : " + readPosition + "," + readLength);
-                    if ((readPosition + readLength) > endBuffer) {
-                        endBuffer = (readPosition + readLength);
-                        Utils.showLog("send change : " +"startbuffer : " + startBuffer + "endbuffer: " + endBuffer);
-                    }
+                    Utils.showLog("Masoud send request kafka position: " + readPosition + "  len: " + readLength);
                     kafkaManager.produceFileChankMessage(readPosition + "," + readLength);
                     last = System.currentTimeMillis();
                     Utils.showLog("send req : ");
@@ -160,12 +183,15 @@ public class BufferManager {
 
         @Override
         public void onRecivedFileChank(byte[] chank) {
-
-            Utils.LogWithDiff("send req : ", last);
-            addToBuffer(new VideoPacket(chank, readPosition, (readPosition + readLength) - 1));
-
-            Log.e(PodStream.TAG, "send recived kafka : readPosition :" + readPosition + " lastLength:  " + readLength);
-            readPosition = (readPosition + readLength);
+            if(readdata) {
+                Utils.showLog("Masoud recive packet diff: " + (System.currentTimeMillis() - last));
+                addToBuffer(new VideoPacket(chank, readPosition, (readPosition + readLength) - 1));
+                Log.e(PodStream.TAG, "send recived kafka : readPosition :" + readPosition + " lastLength:  " + readLength);
+                readPosition = (readPosition + readLength);
+            }
+            else{
+                Utils.showLog("Masoud recive faile ");
+            }
             isWaitForPacket = false;
         }
 
@@ -174,6 +200,9 @@ public class BufferManager {
             loop = false;
         }
 
+        public void setReaddata(boolean readdata) {
+            this.readdata = readdata;
+        }
     }
 
 //
