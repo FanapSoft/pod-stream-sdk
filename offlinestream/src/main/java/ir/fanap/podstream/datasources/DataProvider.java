@@ -1,6 +1,7 @@
 package ir.fanap.podstream.datasources;
 
 import ir.fanap.podstream.datasources.buffer.BufferManager;
+import ir.fanap.podstream.util.Constants;
 import ir.fanap.podstream.util.PodThreadManager;
 import ir.fanap.podstream.util.Utils;
 
@@ -59,7 +60,7 @@ public class DataProvider {
                 }
             } else {
 //                Utils.showLog("send before reset : Roffset :" + offset + "Rend : " + (offset + length) + " start buffer : " + bufferManager.getStartBuffer() + " end buffer : " + bufferManager.getEndBuffer());
-                long readlen=500000;
+                long readlen= Constants.DEAFULT_BUFFER_LENGTH;
                 if(length>readlen)
                     readlen=length;
                 if((offset+readlen)>fileSize)

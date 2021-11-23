@@ -63,7 +63,7 @@ public class BufferManager {
         Utils.showLog("Masoud Restart buffer :" + offset + "end :" + endBuffer + " length "  +length + " file size=" + fileSize);
         if(putStack==null){
             buffer.clear();
-            putStack = new PutStack(startBuffer + endBuffer + "", 10, offset,Constants.DefaultLengthValue);
+            putStack = new PutStack(startBuffer + endBuffer + "", 20, offset,Constants.DefaultLengthValue);
             putStack.start();
         }else{
             putStack.restart(offset,Constants.DefaultLengthValue);

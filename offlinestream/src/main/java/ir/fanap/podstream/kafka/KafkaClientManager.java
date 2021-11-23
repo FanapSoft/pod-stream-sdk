@@ -30,7 +30,7 @@ public class KafkaClientManager {
 
     HashMap<String, Listener> listeners;
     private static KafkaClientManager instance;
-    public static final int CUNSUME_TIMEOUT = 5000;
+    public static final int CUNSUME_TIMEOUT = 60000;
     private KafkaConsumer consumer;
     private KafkaProducer producer;
     private SSLHelper sslHelper;
@@ -136,10 +136,10 @@ public class KafkaClientManager {
                 if (key.equals("10")) {
                     handleError(new String(cr.getValue()));
                 }
-                if (key.equals("5")) {
+                else if (key.equals("5")) {
                     handleFileSizeRecived(Utils.byteArrayToLong(cr.getValue()));
                 }
-                if (key.equals(String.valueOf(Constants.DefaultLengthValue))) {
+                else if (!key.equals("-1") && !key.isEmpty()) {
                     Log.e(PodStream.TAG, "consume: " + key);
                     handleFileChanckRecived(cr.getValue());
                 }
