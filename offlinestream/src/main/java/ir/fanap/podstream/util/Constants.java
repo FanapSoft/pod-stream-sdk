@@ -1,9 +1,12 @@
 package ir.fanap.podstream.util;
 
 public class Constants {
-    public static int DefaultLengthValue = 100000;
+    public static int DefaultLengthValue = 50000;
     public static int
-            DEAFULT_BUFFER_LENGTH = 2000000;
+            DEAFULT_BUFFER_ITEM_COUNT = 0;
+    public static int
+            DEAFULT_BUFFER_LENGTH = DEAFULT_BUFFER_ITEM_COUNT * 10;
+
     public static String CERT_FILE = "-----BEGIN CERTIFICATE-----\n" +
             "MIIECzCCAvOgAwIBAgIUFxZBfkldSmEc6BVxINLcFpAOzlcwDQYJKoZIhvcNAQEL\n" +
             "BQAwgZQxCzAJBgNVBAYTAklSMQ8wDQYDVQQIDAZQYXJkaXMxDzANBgNVBAcMBlRl\n" +
