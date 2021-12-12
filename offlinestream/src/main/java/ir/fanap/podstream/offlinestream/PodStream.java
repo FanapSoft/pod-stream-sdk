@@ -7,11 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-
-import com.example.kafkassl.kafkaclient.ConsumResult;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -27,14 +23,8 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.nio.ByteBuffer;
-
 import io.reactivex.schedulers.Schedulers;
-import ir.fanap.podstream.datasources.DataProvider;
-import ir.fanap.podstream.datasources.FileDataSource;
 import ir.fanap.podstream.datasources.ProgressiveDataSource;
-import ir.fanap.podstream.datasources.buffer.EventListener;
 import ir.fanap.podstream.kafka.KafkaClient;
 import ir.fanap.podstream.kafka.KafkaClientManager;
 import ir.fanap.podstream.model.ErrorOutPut;
@@ -42,12 +32,9 @@ import ir.fanap.podstream.model.FileSetup;
 import ir.fanap.podstream.R;
 import ir.fanap.podstream.util.Constants;
 import ir.fanap.podstream.util.LogTypes;
-import ir.fanap.podstream.util.PodThreadManager;
-import ir.fanap.podstream.util.Utils;
 import ir.fanap.podstream.util.ssl.SSLHelper;
 import ir.fanap.podstream.network.AppApi;
 import ir.fanap.podstream.network.RetrofitClient;
-import ir.fanap.podstream.network.response.TopicResponse;
 import ir.fanap.podstream.util.HandlerMessageType.ActConstants;
 
 public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSource.DataSourceListener {
@@ -294,7 +281,6 @@ public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSo
                 playWhenReady = player.getPlayWhenReady();
                 currentWindow = player.getCurrentWindowIndex();
                 playbackPosition = player.getCurrentPosition();
-                Log.e("'TAG'", "releasePlayer: " + playWhenReady + "   --->   " + currentWindow + "   --->   " + "   --->   " + playbackPosition);
                 player.release();
                 player = null;
             }
@@ -353,12 +339,10 @@ public class PodStream implements KafkaClientManager.Listener, ProgressiveDataSo
     @Override
     public void onFileReady(long fileSize) {
         fileReadyToPlay(fileSize);
-        Log.e(TAG, "onFileReady: " + fileSize);
     }
 
     @Override
     public void onError(int code, String error) {
-        Log.e(TAG, "onError: " + error);
         errorHandle(Constants.StreamerError, error);
     }
 }

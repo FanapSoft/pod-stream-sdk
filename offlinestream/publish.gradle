@@ -1,7 +1,8 @@
 apply plugin: 'maven-publish'
 
 def LIB_GROUP_ID = 'com.github.FanapSoft'
-def LIB_ARTIFACT_ID ='offlinestreamsdk'
+//def LIB_ARTIFACT_ID ='offlinestreamsdk'
+def LIB_ARTIFACT_ID ='offlinestreamsdk-beta'
 
 task sourceJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
@@ -32,8 +33,11 @@ publishing {
             println 'Published started!'
             groupId LIB_GROUP_ID
             artifactId LIB_ARTIFACT_ID
-            version libraryVersion
-            artifact("$buildDir/outputs/aar/offlinestream-release.aar")
+            version '0.0.3'
+            println 'Published start!'
+
+//            artifact("$buildDir/outputs/aar/offline-stream-v$libraryVersion-release-.aar")
+            artifact("$buildDir/outputs/aar/sdk-stream-release-v0.0.3.aar")
             artifact(sourceJar)
 
             pom.withXml {

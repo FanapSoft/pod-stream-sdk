@@ -1,3 +1,4 @@
 include ':offlinestream'
 include ':app'
 rootProject.name = "PodStreamSdkExample"
+include ':kafka-adapter'

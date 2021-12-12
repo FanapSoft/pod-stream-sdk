@@ -3,10 +3,11 @@ plugins {
     id 'com.kezong.fat-aar'
 }
 ext {
-    libraryVersion = '1.1.8'
+    libraryVersion = '1.1.9'
     ndkVersion = '21.3.6528147'
 }
 apply from: file('publish.gradle')
+//apply from: file('jssdk-publish.gradle')
 
 android {
 
@@ -26,36 +27,23 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        publish {
+            consumerProguardFile 'proguard-rules.pro'
+        }
     }
+
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            consumerProguardFile 'proguard-rules.pro'
-        }
-    }
-
     configurations.embed.transitive = true
-
-
-//    configurations {
-//           compile.exclude module: 'versionedparcelable'
-//           compile.exclude module: 'versionedparcelable'
-//    }
-
 }
 
 dependencies {
-//    embed fileTree(dir: 'libs', include: '*.aar')
-//    implementation 'androidx.appcompat:appcompat:1.3.1'
-//    implementation(name: 'kafkaAdapter', ext: 'aar')
-    implementation files('libs/kafkaAdapter.aar')
-//    implementation project('offlinestream/libs/kafkaAdapter.aar')
+    implementation project(path: ':kafka-adapter', configuration: 'default')
+    //  embed
 
     api 'com.google.android.exoplayer:exoplayer-core:2.15.1'
 
@@ -66,8 +54,7 @@ dependencies {
 
     api 'com.squareup.retrofit2:converter-gson:2.8.1'
 
-    api  'org.jetbrains:annotations:16.0.1'
+    api 'org.jetbrains:annotations:16.0.1'
 
 
-    //  embed
 }

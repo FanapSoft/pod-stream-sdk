@@ -14,6 +14,7 @@ public class KafkaFactory {
         consumerProperties.setProperty("sasl.mechanisms", "PLAIN");
         consumerProperties.setProperty("sasl.username", "admin");
         consumerProperties.setProperty("sasl.password", "admin-secret");
+
 //        consumerProperties.setProperty("ssl.ca.location", sslHelper.getCart().getAbsolutePath());
 //        consumerProperties.setProperty("ssl.key.password", "masoud68");
 
@@ -31,6 +32,7 @@ public class KafkaFactory {
         producerProperties.setProperty("sasl.mechanisms", "PLAIN");
         producerProperties.setProperty("sasl.username", "admin");
         producerProperties.setProperty("sasl.password", "admin-secret");
+//
 //        producerProperties.setProperty("ssl.ca.location", sslHelper.getCart().getAbsolutePath());
 //        producerProperties.setProperty("ssl.key.password", "masoud68");
         return (new KafkaProducer.Builder()).setProperties(producerProperties).setBrokerAddress(client.getBrokerAddress()).setTopic(client.getTopic()).setKey(client.getKey()).build();

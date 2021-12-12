@@ -178,13 +178,7 @@ public class KafkaClientManager {
         handleFileSizeRecived(buffer.length);
     }
 
-    boolean isFirst = true;
-
     public void handleFileSizeRecived(long fileSize) {
-        if (isFirst) {
-            isFirst = false;
-            return;
-        }
         listeners.get("main").onFileReady(fileSize);
     }
 
